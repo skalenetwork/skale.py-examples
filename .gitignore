@@ -127,3 +127,9 @@ dmypy.json
 
 # Editors
 .vscode/
+.idea/
+
+# ETH
+abi.json
+
+creds/

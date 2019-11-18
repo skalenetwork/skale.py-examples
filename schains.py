@@ -27,16 +27,16 @@ import click
 
 import skale.utils.helper as Helper
 from skale import Skale
-from skale.utils.web3_utils import wait_receipt, check_receipt
+from skale.utils.helper import await_receipt, check_receipt
 from skale.utils.account_tools import (check_ether_balance,
                                        check_skale_balance, generate_account,
                                        init_wallet as init_base_wallet,
                                        send_ether, send_tokens)
 from skale.utils.constants import LONG_LINE
 from skale.utils.random_names.generator import generate_random_schain_name
-from tests.utils import generate_random_schain_data
+from utils import generate_random_schain_data
 
-from examples.helper import ENDPOINT, ABI_FILEPATH
+from helper import ENDPOINT, ABI_FILEPATH
 
 
 Helper.init_default_logger()
@@ -74,12 +74,13 @@ def save_info(schain_index, schain_info=None, wallet=None, data_dir=None):
 def create_schain(skale, wallet):
     type_of_nodes, lifetime_seconds, old_name = generate_random_schain_data()
     schain_name = generate_random_schain_name()
+    #schain_name = 'test-schain'
     price_in_wei = skale.schains.get_schain_price(type_of_nodes,
                                                   lifetime_seconds)
 
     res = skale.manager.create_schain(lifetime_seconds, type_of_nodes,
                                       price_in_wei, schain_name, wallet)
-    receipt = wait_receipt(skale.web3, res['tx'])
+    receipt = await_receipt(skale.web3, res['tx'])
     check_receipt(receipt)
 
     schain_struct = skale.schains_data.get_by_name(schain_name)
@@ -137,7 +138,7 @@ def remove(ctx, schain_name):
     skale = ctx.obj['skale']
     wallet = init_base_wallet()
     res = skale.manager.delete_schain(schain_name, wallet)
-    receipt = wait_receipt(skale.web3, res['tx'])
+    receipt = await_receipt(skale.web3, res['tx'])
     check_receipt(receipt)
     print(f'sChain {schain_name} removed!')
 

@@ -6,7 +6,7 @@ from skale import Skale
 from skale.wallets import RPCWallet
 
 from skale.utils.constants import LONG_LINE
-from tests.utils import generate_random_node_data
+from utils import generate_random_node_data
 
 from constants import ENDPOINT, ABI_FILEPATH
 

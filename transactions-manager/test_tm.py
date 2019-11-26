@@ -1,7 +1,7 @@
 import threading
 from skale import Skale
 from skale.wallets import RPCWallet
-from helper import ENDPOINT, ABI_FILEPATH
+from constants import ENDPOINT, ABI_FILEPATH
 from utils import generate_random_node_data
 from skale.utils.web3_utils import wait_receipt
 

@@ -36,7 +36,7 @@ from skale.utils.constants import LONG_LINE
 from skale.utils.random_names.generator import generate_random_schain_name
 from utils import generate_random_schain_data
 
-from helper import ENDPOINT, ABI_FILEPATH
+from constants import ENDPOINT, ABI_FILEPATH
 
 
 Helper.init_default_logger()

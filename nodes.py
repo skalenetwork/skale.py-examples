@@ -23,26 +23,25 @@ import os
 
 import click
 
-import skale.utils.helper as Helper
-from skale.utils.helper import ip_from_bytes
-from skale.utils.web3_utils import wait_receipt, check_receipt
 from skale import Skale
-from skale.utils.account_tools import init_wallet
+from skale.utils.web3_utils import wait_receipt, check_receipt
+from skale.utils.helper import ip_from_bytes, init_default_logger
 from skale.utils.constants import LONG_LINE
-from utils import generate_random_node_data
 
-from examples.helper import ENDPOINT, ABI_FILEPATH
-
-Helper.init_default_logger()
+from utils import init_wallet, generate_random_node_data
+from contstants import ENDPOINT, ABI_FILEPATH
 
 
-def create_node(skale, wallet):
+init_default_logger()
+
+
+def create_node(skale):
     ip, public_ip, port, name = generate_random_node_data()
     port = 10000
-    res = skale.manager.create_node(ip, port, name, wallet, public_ip)
+    res = skale.manager.create_node(ip, port, name, public_ip)
     receipt = wait_receipt(skale.web3, res['tx'])
     return receipt
-
+        
 
 @click.group()
 @click.option('--endpoint', default=ENDPOINT, help='Skale manager endpoint')
@@ -51,7 +50,8 @@ def create_node(skale, wallet):
 @click.pass_context
 def main(ctx, endpoint, abi_filepath):
     ctx.ensure_object(dict)
-    ctx.obj['skale'] = Skale(endpoint, abi_filepath)
+    wallet = init_wallet() # todo: pass custom endpoint
+    ctx.obj['skale'] = Skale(ENDPOINT, ABI_FILEPATH, wallet)
 
 
 @main.command()
@@ -59,14 +59,13 @@ def main(ctx, endpoint, abi_filepath):
 @click.pass_context
 def create(ctx, amount):
     """ Command to create given amount of nodes """
-    wallet = init_wallet()
     skale = ctx.obj['skale']
 
     print(f'Creating {amount} nodes...')
     for i in range(int(amount)):
         print(LONG_LINE)
         print(f'Creating {i+1}/{amount} node...')
-        receipt = create_node(skale, wallet)
+        receipt = create_node(skale)
         check_receipt(receipt)
 
 
@@ -120,7 +119,9 @@ def show(ctx):
         data = skale.nodes_data.get(_id)
         name = data.get('name')
         ip = ip_from_bytes(data.get('ip'))
-        nodes_data.append((_id, name, ip))
+        pub_key = skale.web3.toHex(data['publicKey'])
+        port = data.get('port')
+        nodes_data.append((_id, name, ip, port, pub_key))
     print(nodes_data)
 
 
@@ -130,10 +131,9 @@ def show(ctx):
 def remove(ctx, node_name):
     """ Command to remove node spcified by name """
     skale = ctx.obj['skale']
-    wallet = init_wallet()
 
     node_id = skale.nodes_data.node_name_to_index(node_name)
-    res = skale.manager.delete_node_by_root(node_id, wallet)
+    res = skale.manager.delete_node_by_root(node_id)
 
     receipt = wait_receipt(skale.web3, res['tx'])
     check_receipt(receipt)

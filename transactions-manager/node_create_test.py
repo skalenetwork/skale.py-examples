@@ -8,7 +8,7 @@ from skale.wallets import RPCWallet
 from skale.utils.constants import LONG_LINE
 from tests.utils import generate_random_node_data
 
-from helper import ENDPOINT, ABI_FILEPATH
+from constants import ENDPOINT, ABI_FILEPATH
 
 
 Helper.init_default_logger()

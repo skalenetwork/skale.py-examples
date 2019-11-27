@@ -25,21 +25,21 @@ import os
 
 import click
 
-import skale.utils.helper as Helper
 from skale import Skale
-from skale.utils.helper import await_receipt, check_receipt
+from skale.wallets import Web3Wallet
+from skale.utils.helper import init_default_logger
+from skale.utils.web3_utils import wait_receipt, check_receipt
 from skale.utils.account_tools import (check_ether_balance,
                                        check_skale_balance, generate_account,
-                                       init_wallet as init_base_wallet,
                                        send_ether, send_tokens)
 from skale.utils.constants import LONG_LINE
 from skale.utils.random_names.generator import generate_random_schain_name
-from utils import generate_random_schain_data
+from utils import generate_random_schain_data, init_wallet
 
-from constants import ENDPOINT, ABI_FILEPATH
+from config import ENDPOINT, ABI_FILEPATH, ETH_PRIVATE_KEY
 
 
-Helper.init_default_logger()
+init_default_logger()
 logger = logging.getLogger(__name__)
 
 
@@ -49,7 +49,8 @@ logger = logging.getLogger(__name__)
 @click.pass_context
 def main(ctx, endpoint, abi_filepath):
     ctx.ensure_object(dict)
-    ctx.obj['skale'] = Skale(endpoint, abi_filepath)
+    wallet = init_wallet(endpoint)
+    ctx.obj['skale'] = Skale(endpoint, abi_filepath, wallet)
 
 
 def save_info(schain_index, schain_info=None, wallet=None, data_dir=None):
@@ -80,7 +81,7 @@ def create_schain(skale, wallet):
 
     res = skale.manager.create_schain(lifetime_seconds, type_of_nodes,
                                       price_in_wei, schain_name, wallet)
-    receipt = await_receipt(skale.web3, res['tx'])
+    receipt = wait_receipt(skale.web3, res['tx'])
     check_receipt(receipt)
 
     schain_struct = skale.schains_data.get_by_name(schain_name)
@@ -89,16 +90,16 @@ def create_schain(skale, wallet):
 
 
 def create_account(skale, skale_amount, eth_amount, debug=True):
-    base_wallet = init_base_wallet()
-    wallet = generate_account(skale.web3)
+    base_wallet = Web3Wallet(ETH_PRIVATE_KEY, skale.web3)
+    wallet_dict = generate_account(skale.web3)
+    wallet = Web3Wallet(wallet_dict['private_key'], skale.web3)
 
-    send_tokens(skale, base_wallet, wallet['address'], skale_amount, debug)
-    send_ether(skale.web3, base_wallet, wallet['address'], eth_amount, debug)
+    send_tokens(skale, base_wallet, wallet.address, skale_amount, debug)
+    send_ether(skale.web3, base_wallet, wallet.address, eth_amount, debug)
 
     if debug:
-        check_ether_balance(skale.web3, wallet['address'])
-        check_skale_balance(skale, wallet['address'])
-
+        check_ether_balance(skale.web3, wallet.address)
+        check_skale_balance(skale, wallet.address)
     return wallet
 
 
@@ -136,9 +137,8 @@ def remove(ctx, schain_name):
     """ Command that removes schain by name """
     # TODO: check if this function works
     skale = ctx.obj['skale']
-    wallet = init_base_wallet()
-    res = skale.manager.delete_schain(schain_name, wallet)
-    receipt = await_receipt(skale.web3, res['tx'])
+    res = skale.manager.delete_schain(schain_name)
+    receipt = wait_receipt(skale.web3, res['tx'])
     check_receipt(receipt)
     print(f'sChain {schain_name} removed!')
 

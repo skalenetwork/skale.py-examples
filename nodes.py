@@ -29,7 +29,7 @@ from skale.utils.helper import ip_from_bytes, init_default_logger
 from skale.utils.constants import LONG_LINE
 
 from utils import init_wallet, generate_random_node_data
-from contstants import ENDPOINT, ABI_FILEPATH
+from config import ENDPOINT, ABI_FILEPATH
 
 
 init_default_logger()
@@ -50,8 +50,8 @@ def create_node(skale):
 @click.pass_context
 def main(ctx, endpoint, abi_filepath):
     ctx.ensure_object(dict)
-    wallet = init_wallet() # todo: pass custom endpoint
-    ctx.obj['skale'] = Skale(ENDPOINT, ABI_FILEPATH, wallet)
+    wallet = init_wallet(endpoint)
+    ctx.obj['skale'] = Skale(endpoint, abi_filepath, wallet)
 
 
 @main.command()

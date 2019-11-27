@@ -24,15 +24,15 @@ from skale.wallets import RPCWallet
 from skale.wallets import Web3Wallet
 from skale.utils.web3_utils import init_web3
 
-from constants import ENDPOINT, TM_URL, ETH_PRIVATE_KEY
+from config import TM_URL, ETH_PRIVATE_KEY
 
 
-def init_wallet():
+def init_wallet(endpoint):
     if not TM_URL and not ETH_PRIVATE_KEY:
         raise Exception('You should provide TM_URL or ETH_PRIVATE_KEY to init wallet')
     if TM_URL:
         return RPCWallet(TM_URL)
-    web3 = init_web3(ENDPOINT)
+    web3 = init_web3(endpoint)
     return Web3Wallet(ETH_PRIVATE_KEY, web3)
 
 

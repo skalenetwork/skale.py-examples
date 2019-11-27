@@ -4,7 +4,7 @@ from skale.utils.helper import ip_from_bytes
 from skale import Skale
 from skale.wallets import RPCWallet
 
-from constants import ENDPOINT, ABI_FILEPATH
+from config import ENDPOINT, ABI_FILEPATH
 
 Helper.init_default_logger()
 

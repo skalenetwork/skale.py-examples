@@ -7,11 +7,6 @@ There are two main parts:
 -   nodes.py - set of CLI commands for managing SKALE nodes
 -   schains.py - set of CLI commands for managing SKALE schains
 
-It is important to set skale.py/skale to your PYTHONPATH.
-
-```bash
-export PYTHONPATH={$PYTHONPATH}:~/some-dir/skale.py/skale/
-```
 
 ## Nodes.py
 

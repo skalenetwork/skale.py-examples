@@ -53,13 +53,17 @@ def main(ctx, endpoint, abi_filepath):
     ctx.obj['skale'] = Skale(endpoint, abi_filepath, wallet)
 
 
-def save_info(schain_index, schain_info=None, wallet=None, data_dir=None):
+def save_info(schain_index, schain_info=None, wallet=None, private_key=None, data_dir=None):
     time = datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
     schain_name = schain_info['schain_struct']['name']
     filename = f'wallet_{schain_index}_{schain_name}_{time}.json'
     info = {
         'schain_info': schain_info,
-        'wallet': wallet
+        'wallet': {
+            'address': wallet.address,
+            'public_key': wallet.public_key,
+            'private_key': private_key
+        }
     }
     if data_dir:
         if not os.path.exists(data_dir):
@@ -80,7 +84,7 @@ def create_schain(skale, wallet):
                                                   lifetime_seconds)
 
     res = skale.manager.create_schain(lifetime_seconds, type_of_nodes,
-                                      price_in_wei, schain_name, wallet)
+                                      price_in_wei, schain_name)
     receipt = wait_receipt(skale.web3, res['tx'])
     check_receipt(receipt)
 
@@ -100,7 +104,7 @@ def create_account(skale, skale_amount, eth_amount, debug=True):
     if debug:
         check_ether_balance(skale.web3, wallet.address)
         check_skale_balance(skale, wallet.address)
-    return wallet
+    return wallet, wallet_dict['private_key']
 
 
 def show_all_schain_ids(skale):
@@ -123,9 +127,9 @@ def create(ctx, amount, save_to, skale_amount, eth_amount):
     """ Command that creates new accounts with schains """
     skale = ctx.obj['skale']
     for i in range(amount):
-        wallet = create_account(skale, skale_amount, eth_amount)
+        wallet, private_key = create_account(skale, skale_amount, eth_amount)
         schain_info = create_schain(skale, wallet)
-        save_info(i, schain_info, wallet, save_to)
+        save_info(i, schain_info, wallet, private_key, save_to)
         logger.info(LONG_LINE)
     show_all_schain_ids(skale)
 

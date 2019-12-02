@@ -41,7 +41,23 @@ def create_node(skale):
     res = skale.manager.create_node(ip, port, name, public_ip)
     receipt = wait_receipt(skale.web3, res['tx'])
     return receipt
-        
+
+
+def remove_node(skale, name):
+    node_id = skale.nodes_data.node_name_to_index(name)
+    res = skale.manager.delete_node_by_root(node_id)
+    receipt = wait_receipt(skale.web3, res['tx'])
+    check_receipt(receipt)
+    print(f'Node {name} was successfully removed')
+
+
+def remove_active_nodes(skale):
+    for node_id in skale.nodes_data.get_active_node_ids():
+        node = skale.nodes_data.get(node_id)
+        node_name = node.get('name')
+        if node_name:
+            remove_node(skale, node_name)
+
 
 @click.group()
 @click.option('--endpoint', default=ENDPOINT, help='Skale manager endpoint')
@@ -129,14 +145,17 @@ def show(ctx):
 @click.argument('node-name')
 @click.pass_context
 def remove(ctx, node_name):
-    """ Command to remove node spcified by name """
+    """ Command to remove node specified by name """
     skale = ctx.obj['skale']
+    remove_node(skale, node_name)
 
-    node_id = skale.nodes_data.node_name_to_index(node_name)
-    res = skale.manager.delete_node_by_root(node_id)
 
-    receipt = wait_receipt(skale.web3, res['tx'])
-    check_receipt(receipt)
+@main.command()
+@click.pass_context
+def remove_all(ctx):
+    """ Command to remove node specified by name """
+    skale = ctx.obj['skale']
+    remove_active_nodes(skale)
 
 
 if __name__ == "__main__":

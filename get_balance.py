@@ -1,7 +1,7 @@
 import os
 from skale import Skale
 from skale.wallets import RPCWallet
-from helper import ENDPOINT, ABI_FILEPATH
+from config import ENDPOINT, ABI_FILEPATH
 
 TM_URL = os.environ['TM_URL']
 

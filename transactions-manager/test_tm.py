@@ -11,7 +11,6 @@ TM_URL = os.environ['TM_URL']
 wallet = RPCWallet(TM_URL)
 skale = Skale(ENDPOINT, ABI_FILEPATH, wallet)
 
-print('Address: ', wallet.address)
 
 def main():
     monitors = []
@@ -21,6 +20,7 @@ def main():
         monitors.append(monitor)
     for monitor in monitors:
         monitor.join()
+
 
 def create_nodes():
     for _ in range(0, 100):
@@ -37,5 +37,6 @@ def create_node():
 
 
 if __name__ == "__main__":
+    print('Address: ', wallet.address)
     create_node()
-    #main()
+    # main()

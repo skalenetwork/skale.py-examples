@@ -133,3 +133,5 @@ dmypy.json
 manager.json
 
 creds/
+
+.DS_Store

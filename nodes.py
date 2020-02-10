@@ -24,7 +24,7 @@ import os
 import click
 
 from skale import Skale
-from skale.utils.web3_utils import wait_receipt, check_receipt
+from skale.utils.web3_utils import check_receipt
 from skale.utils.helper import ip_from_bytes, init_default_logger
 from skale.utils.constants import LONG_LINE
 
@@ -38,10 +38,8 @@ init_default_logger()
 def create_node(skale):
     ip, public_ip, port, name = generate_random_node_data()
     port = 10000
-    res = skale.manager.create_node(ip, port, name, public_ip)
-    receipt = wait_receipt(skale.web3, res['tx'])
-    return receipt
-        
+    return skale.manager.create_node(ip, port, name, public_ip, wait_for=True)
+   
 
 @click.group()
 @click.option('--endpoint', default=ENDPOINT, help='Skale manager endpoint')
@@ -65,8 +63,8 @@ def create(ctx, amount):
     for i in range(int(amount)):
         print(LONG_LINE)
         print(f'Creating {i+1}/{amount} node...')
-        receipt = create_node(skale)
-        check_receipt(receipt)
+        tx_res = create_node(skale)
+        check_receipt(tx_res.receipt)
 
 
 @main.command()
@@ -133,10 +131,8 @@ def remove(ctx, node_name):
     skale = ctx.obj['skale']
 
     node_id = skale.nodes_data.node_name_to_index(node_name)
-    res = skale.manager.delete_node_by_root(node_id)
-
-    receipt = wait_receipt(skale.web3, res['tx'])
-    check_receipt(receipt)
+    tx_res = skale.manager.delete_node_by_root(node_id, wait_for=True)
+    check_receipt(tx_res.receipt)
 
 
 if __name__ == "__main__":

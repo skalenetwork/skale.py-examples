@@ -27,6 +27,7 @@ import click
 
 from skale import Skale
 from skale.wallets import Web3Wallet
+from skale.schain_config.generator import get_nodes_for_schain_config
 from skale.utils.helper import init_default_logger
 from skale.utils.web3_utils import wait_receipt, check_receipt
 from skale.utils.account_tools import (check_ether_balance,
@@ -53,7 +54,8 @@ def main(ctx, endpoint, abi_filepath):
     ctx.obj['skale'] = Skale(endpoint, abi_filepath, wallet)
 
 
-def save_info(schain_index, schain_info=None, wallet=None, private_key=None, data_dir=None):
+def save_info(schain_index, schain_info=None, wallet=None,
+              private_key=None, data_dir=None):
     time = datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
     schain_name = schain_info['schain_struct']['name']
     filename = f'wallet_{schain_index}_{schain_name}_{time}.json'
@@ -76,10 +78,9 @@ def save_info(schain_index, schain_info=None, wallet=None, private_key=None, dat
             json.dump(info, outfile, indent=4)
 
 
-def create_schain(skale, wallet):
+def create_schain(skale):
     type_of_nodes, lifetime_seconds, old_name = generate_random_schain_data()
     schain_name = generate_random_schain_name()
-    #schain_name = 'test-schain'
     price_in_wei = skale.schains.get_schain_price(type_of_nodes,
                                                   lifetime_seconds)
 
@@ -89,7 +90,7 @@ def create_schain(skale, wallet):
     check_receipt(receipt)
 
     schain_struct = skale.schains_data.get_by_name(schain_name)
-    schain_nodes = skale.schains_data.get_nodes_for_schain_config(schain_name)
+    schain_nodes = get_nodes_for_schain_config(skale, schain_name)
     return {'schain_struct': schain_struct, 'schain_nodes': schain_nodes}
 
 
@@ -128,7 +129,8 @@ def create(ctx, amount, save_to, skale_amount, eth_amount):
     skale = ctx.obj['skale']
     for i in range(amount):
         wallet, private_key = create_account(skale, skale_amount, eth_amount)
-        schain_info = create_schain(skale, wallet)
+        skale_acc = Skale(skale._endpoint, skale._abi_filepath, wallet)
+        schain_info = create_schain(skale_acc)
         save_info(i, schain_info, wallet, private_key, save_to)
         logger.info(LONG_LINE)
     show_all_schain_ids(skale)

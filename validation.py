@@ -21,7 +21,6 @@
 import click
 
 from skale import Skale
-from skale.utils.web3_utils import wait_receipt, check_receipt
 from skale.utils.helper import init_default_logger
 
 from utils import init_wallet
@@ -50,14 +49,13 @@ def main(ctx, endpoint, abi_filepath):
 def register(ctx, name):
     """ Command to remove node spcified by name """
     skale = ctx.obj['skale']
-    tx_res = skale.delegation_service.register_validator(
+    skale.delegation_service.register_validator(
         name=name,
         description='',
         fee_rate=1,
         min_delegation_amount=1,
         wait_for=True
     )
-    check_receipt(tx_res.receipt)
 
 
 @main.command()
@@ -74,14 +72,13 @@ def ls(ctx):
 def delegate(ctx, validator_id):
     skale = ctx.obj['skale']
     msr = skale.constants_holder.msr()
-    tx_res = skale.delegation_service.delegate(
+    skale.delegation_service.delegate(
         validator_id=validator_id,
         amount=msr,
         delegation_period=3,
         info='',
         wait_for=True
     )
-    check_receipt(tx_res.receipt)
 
 
 @main.command()
@@ -105,8 +102,7 @@ def delegations_by_validator(ctx):
 @click.pass_context
 def accept_request(ctx, delegation_id):
     skale = ctx.obj['skale']
-    tx_res = skale.delegation_service.accept_pending_delegation(delegation_id, wait_for=True)
-    check_receipt(tx_res.receipt)
+    skale.delegation_service.accept_pending_delegation(delegation_id, wait_for=True)
 
 
 @main.command()
@@ -126,8 +122,7 @@ def send_funds(ctx):
 def whitelist(ctx, validator_id):
     """Owner only transaction"""
     skale = ctx.obj['skale']
-    tx_res = skale.validator_service._enable_validator(validator_id, wait_for=True)
-    check_receipt(tx_res.receipt)
+    skale.validator_service._enable_validator(validator_id, wait_for=True)
 
 
 @main.command()
@@ -145,8 +140,7 @@ def trusted(ctx, validator_id):
 def skip_delay(ctx, delegation_id):
     """Owner only transaction"""
     skale = ctx.obj['skale']
-    tx_res = skale.token_state._skip_transition_delay(delegation_id, wait_for=True)
-    check_receipt(tx_res.receipt)
+    skale.token_state._skip_transition_delay(delegation_id, wait_for=True)
 
 
 @main.command()
@@ -155,11 +149,10 @@ def skip_delay(ctx, delegation_id):
 def set_msr(ctx, new_msr):
     """Owner only transaction"""
     skale = ctx.obj['skale']
-    tx_res = skale.constants_holder._set_msr(
+    skale.constants_holder._set_msr(
         new_msr=new_msr,
         wait_for=True
     )
-    check_receipt(tx_res.receipt)
 
 
 if __name__ == "__main__":

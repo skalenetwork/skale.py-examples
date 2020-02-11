@@ -24,7 +24,6 @@ import os
 import click
 
 from skale import Skale
-from skale.utils.web3_utils import check_receipt
 from skale.utils.helper import ip_from_bytes, init_default_logger
 from skale.utils.constants import LONG_LINE
 
@@ -63,9 +62,7 @@ def create(ctx, amount):
     for i in range(int(amount)):
         print(LONG_LINE)
         print(f'Creating {i+1}/{amount} node...')
-        tx_res = create_node(skale)
-        check_receipt(tx_res.receipt)
-
+        create_node(skale)
 
 @main.command()
 @click.option('--save-to', default='./schains-by-node',
@@ -131,8 +128,7 @@ def remove(ctx, node_name):
     skale = ctx.obj['skale']
 
     node_id = skale.nodes_data.node_name_to_index(node_name)
-    tx_res = skale.manager.delete_node_by_root(node_id, wait_for=True)
-    check_receipt(tx_res.receipt)
+    skale.manager.delete_node_by_root(node_id, wait_for=True)
 
 
 if __name__ == "__main__":

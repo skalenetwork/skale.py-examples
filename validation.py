@@ -102,7 +102,8 @@ def delegations_by_validator(ctx):
 @click.pass_context
 def accept_request(ctx, delegation_id):
     skale = ctx.obj['skale']
-    skale.delegation_service.accept_pending_delegation(delegation_id, wait_for=True)
+    skale.delegation_service.accept_pending_delegation(delegation_id,
+                                                       wait_for=True)
 
 
 @main.command()
@@ -122,7 +123,7 @@ def send_funds(ctx):
 def whitelist(ctx, validator_id):
     """Owner only transaction"""
     skale = ctx.obj['skale']
-    skale.validator_service._enable_validator(validator_id, wait_for=True)
+    skale.validator_service._enable_validator(int(validator_id), wait_for=True)
 
 
 @main.command()
@@ -130,7 +131,7 @@ def whitelist(ctx, validator_id):
 @click.pass_context
 def trusted(ctx, validator_id):
     skale = ctx.obj['skale']
-    res = skale.validator_service._is_validator_trusted(validator_id)
+    res = skale.validator_service._is_validator_trusted(int(validator_id))
     print(res)
 
 
@@ -140,7 +141,7 @@ def trusted(ctx, validator_id):
 def skip_delay(ctx, delegation_id):
     """Owner only transaction"""
     skale = ctx.obj['skale']
-    skale.token_state._skip_transition_delay(delegation_id, wait_for=True)
+    skale.token_state._skip_transition_delay(int(delegation_id), wait_for=True)
 
 
 @main.command()

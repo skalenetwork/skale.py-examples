@@ -38,7 +38,7 @@ def create_node(skale):
     ip, public_ip, port, name = generate_random_node_data()
     port = 10000
     return skale.manager.create_node(ip, port, name, public_ip, wait_for=True)
-   
+
 
 @click.group()
 @click.option('--endpoint', default=ENDPOINT, help='Skale manager endpoint')
@@ -63,6 +63,7 @@ def create(ctx, amount):
         print(LONG_LINE)
         print(f'Creating {i+1}/{amount} node...')
         create_node(skale)
+
 
 @main.command()
 @click.option('--save-to', default='./schains-by-node',

@@ -39,14 +39,14 @@ def create_node(skale):
     ip, public_ip, port, name = generate_random_node_data()
     port = 10000
     res = skale.manager.create_node(ip, port, name, public_ip)
-    receipt = wait_receipt(skale.web3, res['tx'])
+    receipt = wait_receipt(skale.web3, res['tx'], retries=500)
     return receipt
 
 
 def remove_node(skale, name):
     node_id = skale.nodes_data.node_name_to_index(name)
     res = skale.manager.delete_node_by_root(node_id)
-    receipt = wait_receipt(skale.web3, res['tx'])
+    receipt = wait_receipt(skale.web3, res['tx'], retries=500)
     check_receipt(receipt)
     print(f'Node {name} was successfully removed')
 

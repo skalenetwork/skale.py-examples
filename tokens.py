@@ -57,7 +57,7 @@ def transfer(ctx, address_to, tokens_amount):
 def show_skl_balance(skale):
     address = Web3.toChecksumAddress(skale.wallet.address)
     balance = skale.token.get_balance(address)
-    print('Balance {} SKL'.format(balance))
+    print('Balance {} SKL'.format(balance / (10 ** 18)))
 
 
 @main.command()

@@ -109,7 +109,7 @@ def create_schain(skale, wallet, nodes_type_name):
 
     res = skale.manager.create_schain(lifetime_seconds, nodes_type_idx,
                                       price_in_wei, schain_name)
-    receipt = wait_receipt(skale.web3, res['tx'])
+    receipt = wait_receipt(skale.web3, res['tx'], retries=500)
     check_receipt(receipt)
 
     schain_struct = skale.schains_data.get_by_name(schain_name)
@@ -119,7 +119,7 @@ def create_schain(skale, wallet, nodes_type_name):
 
 def remove_schain(skale, name):
     res = skale.manager.delete_schain(name)
-    receipt = wait_receipt(skale.web3, res['tx'])
+    receipt = wait_receipt(skale.web3, res['tx'], retries=500)
     check_receipt(receipt)
     print(f'sChain {name} removed!')
 

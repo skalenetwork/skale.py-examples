@@ -18,6 +18,8 @@
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """ Commands to manage SKALE validators """
 
+import json
+
 import click
 
 from skale import Skale
@@ -47,7 +49,7 @@ def main(ctx, endpoint, abi_filepath):
 @click.argument('name')
 @click.pass_context
 def register(ctx, name):
-    """ Command to remove node spcified by name """
+    """ Register validator """
     skale = ctx.obj['skale']
     skale.delegation_service.register_validator(
         name=name,
@@ -61,15 +63,17 @@ def register(ctx, name):
 @main.command()
 @click.pass_context
 def ls(ctx):
+    """ Show information about validators """
     skale = ctx.obj['skale']
     validators = skale.validator_service.ls()
-    print(validators)
+    print(json.dumps(validators, indent=4, sort_keys=True))
 
 
 @main.command()
 @click.argument('validator_id')
 @click.pass_context
 def delegate(ctx, validator_id):
+    """ Delegate tokens to validator specified by id """
     skale = ctx.obj['skale']
     msr = skale.constants_holder.msr()
     skale.delegation_service.delegate(
@@ -84,16 +88,20 @@ def delegate(ctx, validator_id):
 @main.command()
 @click.pass_context
 def delegations_by_holder(ctx):
+    """ Show delegations by holder """
     skale = ctx.obj['skale']
-    res = skale.delegation_service.get_all_delegations_by_holder(skale.wallet.address)
+    res = skale.delegation_service.get_all_delegations_by_holder(
+        skale.wallet.address)
     print(res)
 
 
 @main.command()
 @click.pass_context
 def delegations_by_validator(ctx):
+    """ Show delegations by validator """
     skale = ctx.obj['skale']
-    res = skale.delegation_service.get_all_delegations_by_validator(skale.wallet.address)
+    res = skale.delegation_service.get_all_delegations_by_validator(
+        skale.wallet.address)
     print(res)
 
 
@@ -101,6 +109,7 @@ def delegations_by_validator(ctx):
 @click.argument('delegation_id')
 @click.pass_context
 def accept_request(ctx, delegation_id):
+    """ Accept delegation specified by id """
     skale = ctx.obj['skale']
     skale.delegation_service.accept_pending_delegation(delegation_id,
                                                        wait_for=True)
@@ -121,7 +130,8 @@ def send_funds(ctx):
 @click.argument('validator_id')
 @click.pass_context
 def whitelist(ctx, validator_id):
-    """Owner only transaction"""
+    """ Add validator specified by id to whitelist """
+    """(owner only transaction)"""
     skale = ctx.obj['skale']
     skale.validator_service._enable_validator(int(validator_id), wait_for=True)
 
@@ -130,6 +140,8 @@ def whitelist(ctx, validator_id):
 @click.argument('validator_id')
 @click.pass_context
 def trusted(ctx, validator_id):
+    """ Check if validator specified by id trused """
+    """(owner only transaction)"""
     skale = ctx.obj['skale']
     res = skale.validator_service._is_validator_trusted(int(validator_id))
     print(res)
@@ -139,7 +151,8 @@ def trusted(ctx, validator_id):
 @click.argument('delegation_id')
 @click.pass_context
 def skip_delay(ctx, delegation_id):
-    """Owner only transaction"""
+    """ Skip delegation delay specified by delegation id """
+    """(owner only transaction)"""
     skale = ctx.obj['skale']
     skale.token_state._skip_transition_delay(int(delegation_id), wait_for=True)
 
@@ -148,7 +161,7 @@ def skip_delay(ctx, delegation_id):
 @click.argument('new_msr')
 @click.pass_context
 def set_msr(ctx, new_msr):
-    """Owner only transaction"""
+    """ Set minimum stacking amount (owner only transaction) """
     skale = ctx.obj['skale']
     skale.constants_holder._set_msr(
         new_msr=new_msr,

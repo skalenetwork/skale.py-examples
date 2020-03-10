@@ -99,7 +99,7 @@ def show_all_schains_names(skale):
 
 def create_schain(skale, wallet, nodes_type_name):
     lifetime_seconds = 12 * 3600  # 12 hours
-    nodes_type_idx = int(SchainType[nodes_type_name])
+    nodes_type_idx = int(SchainType[nodes_type_name].value)
     print(nodes_type_idx)
     schain_name = generate_random_schain_name()
     price_in_wei = skale.schains.get_schain_price(nodes_type_idx,

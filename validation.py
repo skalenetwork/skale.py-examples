@@ -164,9 +164,20 @@ def set_msr(ctx, new_msr):
     """ Set minimum stacking amount (owner only transaction) """
     skale = ctx.obj['skale']
     skale.constants_holder._set_msr(
-        new_msr=new_msr,
+        new_msr=int(new_msr),
         wait_for=True
     )
+
+
+@main.command()
+@click.argument('validator_id')
+@click.pass_context
+def linked_addresses(ctx, validator_id):
+    """ Get addresses that linked to validator with provided id """
+    skale = ctx.obj['skale']
+    vid = int(validator_id)
+    res = skale.validator_service.get_linked_addresses_by_validator_id(vid)
+    print(res)
 
 
 if __name__ == "__main__":

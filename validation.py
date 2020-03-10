@@ -24,6 +24,7 @@ import click
 
 from skale import Skale
 from skale.utils.helper import init_default_logger
+from skale.utils.contracts_provision.main import _skip_evm_time
 
 from utils import init_wallet
 from config import ENDPOINT, ABI_FILEPATH
@@ -90,7 +91,7 @@ def delegate(ctx, validator_id):
 def delegations_by_holder(ctx):
     """ Show delegations by holder """
     skale = ctx.obj['skale']
-    res = skale.delegation_service.get_all_delegations_by_holder(
+    res = skale.delegation_controller.get_all_delegations_by_holder(
         skale.wallet.address)
     print(res)
 
@@ -100,7 +101,7 @@ def delegations_by_holder(ctx):
 def delegations_by_validator(ctx):
     """ Show delegations by validator """
     skale = ctx.obj['skale']
-    res = skale.delegation_service.get_all_delegations_by_validator(
+    res = skale.delegation_controller.get_all_delegations_by_validator(
         skale.wallet.address)
     print(res)
 
@@ -111,7 +112,7 @@ def delegations_by_validator(ctx):
 def accept_request(ctx, delegation_id):
     """ Accept delegation specified by id """
     skale = ctx.obj['skale']
-    skale.delegation_service.accept_pending_delegation(delegation_id,
+    skale.delegation_controller.accept_pending_delegation(delegation_id,
                                                        wait_for=True)
 
 
@@ -148,13 +149,14 @@ def trusted(ctx, validator_id):
 
 
 @main.command()
-@click.argument('delegation_id')
+@click.argument('time_to_skip')
 @click.pass_context
-def skip_delay(ctx, delegation_id):
-    """ Skip delegation delay specified by delegation id """
-    """(owner only transaction)"""
+def skip_evm_time(ctx, time_to_skip):
+    """ Skip EVM time to activate delegation """
+    """(works only for ganache)"""
     skale = ctx.obj['skale']
-    skale.token_state._skip_transition_delay(int(delegation_id), wait_for=True)
+    _skip_evm_time(skale.web3, time_to_skip)
+    print(f'Skipped {time_to_skip} seconds')
 
 
 @main.command()

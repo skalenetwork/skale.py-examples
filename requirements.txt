@@ -1,2 +1,2 @@
-skale.py==3.1.dev3
+skale.py==3.1dev6
 python-dotenv==0.10.3

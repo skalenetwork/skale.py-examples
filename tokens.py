@@ -51,7 +51,7 @@ def token_transfer(skale, address_to, tokens_amount):
 def transfer(ctx, address_to, tokens_amount):
     """ Command for transfering tokens to address """
     skale = ctx.obj['skale']
-    receipt = token_transfer(skale, address_to, tokens_amount)
+    receipt = token_transfer(skale, address_to, tokens_amount * ETH_IN_WEI)
     check_receipt(receipt)
 
 

@@ -27,13 +27,14 @@ from enum import Enum
 import click
 
 from skale import Skale
-from skale.wallets import Web3Wallet
+from skale.schain_config.generator import get_nodes_for_schain_config
 from skale.utils.helper import init_default_logger
 from skale.utils.account_tools import (check_ether_balance,
                                        check_skale_balance, generate_account,
                                        send_ether, send_tokens)
 from skale.utils.constants import LONG_LINE
 from skale.utils.random_names.generator import generate_random_schain_name
+from skale.wallets import Web3Wallet
 from utils import init_wallet
 
 from config import ENDPOINT, ABI_FILEPATH, ETH_PRIVATE_KEY
@@ -113,7 +114,7 @@ def create_schain(skale, wallet, nodes_type_name):
     )
 
     schain_struct = skale.schains_data.get_by_name(schain_name)
-    schain_nodes = skale.schains_data.get_nodes_for_schain_config(schain_name)
+    schain_nodes = get_nodes_for_schain_config(skale, schain_name)
     return {'schain_struct': schain_struct, 'schain_nodes': schain_nodes}
 
 

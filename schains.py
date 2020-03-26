@@ -147,13 +147,17 @@ def show_all_schain_ids(skale):
               help='Amount of skale to add to new accounts')
 @click.option('--eth-amount', default=10,
               help='Amount of eth to add to new accounts')
+@click.option('--type', default=SchainType.TEST2.name,
+              type=click.Choice([n_type.name for n_type in SchainType],
+                                case_sensitive=False),
+              help='Nodes type (tiny/small/medium/test2/test4) for schain')
 @click.pass_context
-def create_with_account(ctx, amount, save_to, skale_amount, eth_amount):
+def create_with_account(ctx, amount, save_to, skale_amount, eth_amount, type):
     """ Command that creates new accounts with schains """
     skale = ctx.obj['skale']
     for i in range(amount):
         wallet, private_key = create_account(skale, skale_amount, eth_amount)
-        schain_info = create_schain(skale, wallet)
+        schain_info = create_schain(skale, wallet, type)
         save_info(i, schain_info, wallet, private_key, save_to)
         logger.info(LONG_LINE)
     show_all_schain_ids(skale)

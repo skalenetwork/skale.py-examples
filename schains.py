@@ -199,7 +199,7 @@ def remove(ctx, schain_name):
 def show(ctx):
     """ Command that show all schains ids """
     skale = ctx.obj['skale']
-    show_all_schain_ids(skale)
+    show_all_schains_names(skale)
 
 
 if __name__ == "__main__":

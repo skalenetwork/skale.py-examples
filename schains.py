@@ -98,6 +98,12 @@ def show_all_schains_names(skale):
     print('\n'.join(schain_names))
 
 
+def get_schain_info(skale, schain_name):
+    schain_struct = skale.schains_data.get_by_name(schain_name)
+    schain_nodes = get_nodes_for_schain_config(skale, schain_name)
+    return {'schain_struct': schain_struct, 'schain_nodes': schain_nodes}
+
+
 def create_schain(skale, wallet, nodes_type_name):
     lifetime_seconds = 12 * 3600  # 12 hours
     nodes_type_idx = int(SchainType[nodes_type_name].value)
@@ -112,10 +118,7 @@ def create_schain(skale, wallet, nodes_type_name):
         schain_name,
         wait_for=True
     )
-
-    schain_struct = skale.schains_data.get_by_name(schain_name)
-    schain_nodes = get_nodes_for_schain_config(skale, schain_name)
-    return {'schain_struct': schain_struct, 'schain_nodes': schain_nodes}
+    return get_schain_info(skale, schain_name)
 
 
 def create_account(skale, skale_amount, eth_amount, debug=True):
@@ -155,6 +158,7 @@ def show_all_schain_ids(skale):
 def create_with_account(ctx, amount, save_to, skale_amount, eth_amount, type):
     """ Command that creates new accounts with schains """
     skale = ctx.obj['skale']
+    print(save_to)
     for i in range(amount):
         wallet, private_key = create_account(skale, skale_amount, eth_amount)
         schain_info = create_schain(skale, wallet, type)
@@ -200,6 +204,16 @@ def show(ctx):
     """ Command that show all schains ids """
     skale = ctx.obj['skale']
     show_all_schains_names(skale)
+
+
+@main.command()
+@click.pass_context
+@click.argument('schain_name')
+def info(ctx, schain_name):
+    """ Command that show all schains ids """
+    skale = ctx.obj['skale']
+    info = get_schain_info(skale, schain_name)
+    print(json.dumps(info, indent=2))
 
 
 if __name__ == "__main__":

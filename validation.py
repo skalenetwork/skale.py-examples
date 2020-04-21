@@ -25,6 +25,7 @@ import click
 from skale import Skale
 from skale.utils.helper import init_default_logger
 from skale.utils.contracts_provision.main import _skip_evm_time
+from skale.utils.web3_utils import to_checksum_address
 
 from utils import init_wallet
 from config import ENDPOINT, ABI_FILEPATH
@@ -52,7 +53,7 @@ def main(ctx, endpoint, abi_filepath):
 def register(ctx, name):
     """ Register validator """
     skale = ctx.obj['skale']
-    skale.delegation_service.register_validator(
+    skale.validator_service.register_validator(
         name=name,
         description='',
         fee_rate=1,
@@ -113,7 +114,7 @@ def accept_request(ctx, delegation_id):
     """ Accept delegation specified by id """
     skale = ctx.obj['skale']
     skale.delegation_controller.accept_pending_delegation(delegation_id,
-                                                       wait_for=True)
+                                                          wait_for=True)
 
 
 @main.command()
@@ -179,6 +180,42 @@ def linked_addresses(ctx, validator_id):
     skale = ctx.obj['skale']
     vid = int(validator_id)
     res = skale.validator_service.get_linked_addresses_by_validator_id(vid)
+    print(res)
+
+
+@main.command()
+@click.argument('address')
+@click.pass_context
+def validator_id_from_address(ctx, address):
+    """ Get validator id from provided address """
+    skale = ctx.obj['skale']
+    checksum_address = address
+    res = skale.validator_service.validator_id_by_address(checksum_address)
+    print(res)
+
+
+@main.command()
+@click.argument('address')
+@click.pass_context
+def link_address_to_validator(ctx, address):
+    """ Link given address to validator """
+    skale = ctx.obj['skale']
+    checksum_address = to_checksum_address(address)
+    tx_res = skale.validator_service.link_node_address(checksum_address,
+                                                       dry_run=True)
+    print(tx_res.hash)
+    # tx_res.raise_for_status()
+    print('Linked successfully')
+
+
+@main.command()
+@click.argument('address')
+@click.pass_context
+def is_main_address(ctx, address):
+    """ Check if address is main for validator """
+    skale = ctx.obj['skale']
+    checksum_address = to_checksum_address(address)
+    res = skale.validator_service.is_main_address(checksum_address)
     print(res)
 
 

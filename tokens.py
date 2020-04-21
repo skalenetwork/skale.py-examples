@@ -3,7 +3,6 @@ import logging
 import click
 from skale import Skale
 from skale.utils.helper import init_default_logger
-from skale.utils.web3_utils import check_receipt
 
 from web3 import Web3
 from config import ENDPOINT, ABI_FILEPATH
@@ -33,7 +32,8 @@ def token_transfer(skale, address_to, tokens_amount):
     print('Balance from before {}'.format(balance_from_before / ETH_IN_WEI))
     print('Balance to before {}'.format(balance_to_before / ETH_IN_WEI))
 
-    receipt = skale.token.transfer(address_to, tokens_amount, wait_for=True)
+    tx_res = skale.token.transfer(address_to, tokens_amount, wait_for=True)
+    tx_res.raise_for_status()
 
     balance_from_after = skale.token.get_balance(address_from)
     balance_to_after = skale.token.get_balance(address_to)
@@ -41,7 +41,6 @@ def token_transfer(skale, address_to, tokens_amount):
     print('Balance to after {}'.format(balance_to_after / ETH_IN_WEI))
     print(f'Diff from account {balance_from_after - balance_from_before}')
     print(f'Diff to account {balance_to_after - balance_to_before}')
-    return receipt
 
 
 @main.command()
@@ -51,8 +50,8 @@ def token_transfer(skale, address_to, tokens_amount):
 def transfer(ctx, address_to, tokens_amount):
     """ Command for transfering tokens to address """
     skale = ctx.obj['skale']
-    receipt = token_transfer(skale, address_to, tokens_amount * ETH_IN_WEI)
-    check_receipt(receipt)
+    token_transfer(skale, address_to, tokens_amount * ETH_IN_WEI)
+    print('Success')
 
 
 def show_skl_balance(skale):

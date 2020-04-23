@@ -26,6 +26,8 @@ from skale import Skale
 from skale.utils.helper import init_default_logger
 from skale.utils.contracts_provision.main import _skip_evm_time
 from skale.utils.web3_utils import to_checksum_address
+from skale.wallets import Web3Wallet
+from skale.utils.web3_utils import private_key_to_address
 
 from utils import init_wallet
 from config import ENDPOINT, ABI_FILEPATH
@@ -195,16 +197,46 @@ def validator_id_from_address(ctx, address):
 
 
 @main.command()
-@click.argument('address')
+@click.argument('validator-id')
 @click.pass_context
-def link_address_to_validator(ctx, address):
-    """ Link given address to validator """
+def get_link_node_signature(ctx, validator_id):
+    skale = ctx.obj['skale']
+    signature = skale.validator_service.get_link_node_signature(
+        int(validator_id))
+    print(signature)
+
+
+@main.command()
+@click.argument('private_key')
+@click.pass_context
+def link_account_to_validator(ctx, private_key):
+    """ Link address from account provided by private key to validator """
+    skale = ctx.obj['skale']
+    address = private_key_to_address(private_key)
+    checksum_address = to_checksum_address(address)
+    validator_id = skale.validator_service.validator_id_by_address(
+        skale.wallet.address)
+    main_wallet = skale.wallet
+    wallet_for_signature = Web3Wallet(private_key, skale.web3)
+    skale.wallet = wallet_for_signature
+    signature = skale.validator_service.get_link_node_signature(
+        validator_id=validator_id
+    )
+    skale.wallet = main_wallet
+    skale.validator_service.link_node_address(checksum_address, signature)
+    print('Linked successfully')
+
+
+@main.command()
+@click.argument('address')
+@click.argument('signature')
+@click.pass_context
+def link_address_to_validator(ctx, address, signature):
+    """ Link given address with validator node signature to validator """
     skale = ctx.obj['skale']
     checksum_address = to_checksum_address(address)
-    tx_res = skale.validator_service.link_node_address(checksum_address,
-                                                       dry_run=True)
-    print(tx_res.hash)
-    # tx_res.raise_for_status()
+    skale.validator_service.link_node_address(checksum_address,
+                                              signature)
     print('Linked successfully')
 
 
@@ -215,6 +247,7 @@ def is_main_address(ctx, address):
     """ Check if address is main for validator """
     skale = ctx.obj['skale']
     checksum_address = to_checksum_address(address)
+    print(checksum_address)
     res = skale.validator_service.is_main_address(checksum_address)
     print(res)
 

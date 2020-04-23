@@ -75,16 +75,19 @@ def ls(ctx):
 
 @main.command()
 @click.argument('validator_id')
+@click.argument('tokens_amount', default=None)
+@click.argument('period', default=3)
 @click.pass_context
-def delegate(ctx, validator_id):
+def delegate(ctx, validator_id, tokens_amount, period):
     """ Delegate tokens to validator specified by id """
     skale = ctx.obj['skale']
-    msr = skale.constants_holder.msr()
-    skale.delegation_service.delegate(
-        validator_id=validator_id,
-        amount=msr,
-        delegation_period=3,
-        info='',
+    if tokens_amount is None:
+        tokens_amount = skale.constants_holder.msr()
+    skale.delegation_controller.delegate(
+        validator_id=int(validator_id),
+        amount=int(tokens_amount),
+        delegation_period=int(period),
+        info='Test delegate',
         wait_for=True
     )
 

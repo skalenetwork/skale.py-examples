@@ -28,12 +28,13 @@ from skale.utils.contracts_provision.main import _skip_evm_time
 from skale.utils.web3_utils import to_checksum_address
 from skale.wallets import Web3Wallet
 from skale.utils.web3_utils import private_key_to_address
+from web3 import Web3
 
-from utils import init_wallet
 from config import ENDPOINT, ABI_FILEPATH
-
 from schains import create_account
+from utils import init_wallet
 
+MONTH_IN_SECONDS = (60 * 60 * 24 * 31) + 100
 
 init_default_logger()
 
@@ -107,8 +108,9 @@ def delegations_by_holder(ctx):
 def delegations_by_validator(ctx):
     """ Show delegations by validator """
     skale = ctx.obj['skale']
-    res = skale.delegation_controller.get_all_delegations_by_validator(
+    vid = skale.validator_service.validator_id_by_address(
         skale.wallet.address)
+    res = skale.delegation_controller.get_all_delegations_by_validator(vid)
     print(res)
 
 
@@ -157,7 +159,7 @@ def trusted(ctx, validator_id):
 @main.command()
 @click.argument('time_to_skip')
 @click.pass_context
-def skip_evm_time(ctx, time_to_skip):
+def skip_evm_time_ganache(ctx, time_to_skip):
     """ Skip EVM time to activate delegation """
     """(works only for ganache)"""
     skale = ctx.obj['skale']
@@ -225,9 +227,23 @@ def link_account_to_validator(ctx, private_key):
     signature = skale.validator_service.get_link_node_signature(
         validator_id=validator_id
     )
+    print(signature)
     skale.wallet = main_wallet
-    skale.validator_service.link_node_address(checksum_address, signature)
+    skale.validator_service.link_node_address(checksum_address, signature,
+                                              wait_for=True)
     print('Linked successfully')
+
+
+@main.command()
+@click.argument('validator_id')
+@click.pass_context
+def sign_validator_id(ctx, validator_id):
+    """ Get validator_id signed by web3 wallet """
+    skale = ctx.obj['skale']
+    validator_id = int(validator_id)
+    unsigned_hash = Web3.soliditySha3(['uint256'], [validator_id])
+    signed_data = skale.wallet.sign_hash(unsigned_hash.hex())
+    print(signed_data)
 
 
 @main.command()
@@ -238,8 +254,11 @@ def link_address_to_validator(ctx, address, signature):
     """ Link given address with validator node signature to validator """
     skale = ctx.obj['skale']
     checksum_address = to_checksum_address(address)
+    vid = skale.validator_service.validator_id_by_address(skale.wallet.address)
+    print(vid)
     skale.validator_service.link_node_address(checksum_address,
-                                              signature)
+                                              signature,
+                                              wait_for=True)
     print('Linked successfully')
 
 
@@ -253,6 +272,38 @@ def is_main_address(ctx, address):
     print(checksum_address)
     res = skale.validator_service.is_main_address(checksum_address)
     print(res)
+
+
+@main.command()
+@click.pass_context
+def get_current_month(ctx):
+    """ Get current month """
+    skale = ctx.obj['skale']
+    current_month = skale.time_helpers_with_debug.get_current_month()
+    print(f'Current month: {current_month}')
+
+
+@main.command()
+@click.argument('time-to-skip')
+@click.pass_context
+def skip_evm_time(ctx, time_to_skip):
+    """ Skip time_to_skip seconds """
+    skale = ctx.obj['skale']
+    skale.time_helpers_with_debug.skip_time(int(time_to_skip),
+                                            wait_for=True)
+    print('Success')
+
+
+@main.command()
+@click.argument('month_to_skip')
+@click.pass_context
+def skip_evm_month(ctx, month_to_skip):
+    """ Skip month_to_skip months"""
+    skale = ctx.obj['skale']
+    time_to_skip = MONTH_IN_SECONDS * int(month_to_skip)
+    skale.time_helpers_with_debug.skip_time(time_to_skip,
+                                            wait_for=True)
+    print('Success')
 
 
 if __name__ == "__main__":

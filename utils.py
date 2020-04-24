@@ -29,7 +29,8 @@ from config import TM_URL, ETH_PRIVATE_KEY
 
 def init_wallet(endpoint):
     if not TM_URL and not ETH_PRIVATE_KEY:
-        raise Exception('You should provide TM_URL or ETH_PRIVATE_KEY to init wallet')
+        raise Exception(
+            'You should provide TM_URL or ETH_PRIVATE_KEY to init wallet')
     if TM_URL:
         return RPCWallet(TM_URL)
     web3 = init_web3(endpoint)
@@ -41,7 +42,8 @@ def generate_random_ip():
 
 
 def generate_random_name(len=8):
-    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=len))
+    return ''.join(
+        random.choices(string.ascii_uppercase + string.digits, k=len))
 
 
 def generate_random_port():
@@ -49,8 +51,8 @@ def generate_random_port():
 
 
 def generate_random_node_data():
-    return generate_random_ip(), generate_random_ip(), generate_random_port(), \
-        generate_random_name()
+    return generate_random_ip(), generate_random_ip(), \
+        generate_random_port(), generate_random_name()
 
 
 def generate_random_schain_data():

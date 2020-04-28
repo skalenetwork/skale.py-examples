@@ -51,6 +51,12 @@ def main(ctx, endpoint, abi_filepath):
 
 
 @main.command()
+@click.argument('private_key')
+def address_from_key(private_key):
+    print(private_key_to_address(private_key))
+
+
+@main.command()
 @click.argument('name')
 @click.pass_context
 def register(ctx, name):
@@ -242,8 +248,16 @@ def sign_validator_id(ctx, validator_id):
     skale = ctx.obj['skale']
     validator_id = int(validator_id)
     unsigned_hash = Web3.soliditySha3(['uint256'], [validator_id])
+    print(f'Hash in bytes {unsigned_hash}')
+    print(f'Vid - Unsinged hash: {validator_id} - {unsigned_hash.hex()}')
     signed_data = skale.wallet.sign_hash(unsigned_hash.hex())
+    from eth_account._utils import signing
+    v = signed_data.v
+    print(f'v in bytes: {signing.to_bytes(v)}')
+    print(f'v in hex: {signing.to_bytes(v).hex()}')
     print(signed_data)
+    print(signed_data.signature)
+    print(signed_data.signature.hex())
 
 
 @main.command()
@@ -254,8 +268,12 @@ def link_address_to_validator(ctx, address, signature):
     """ Link given address with validator node signature to validator """
     skale = ctx.obj['skale']
     checksum_address = to_checksum_address(address)
+    # signature = signature.strip()
+    # signature = HexBytes(signature).hex()
     vid = skale.validator_service.validator_id_by_address(skale.wallet.address)
     print(vid)
+    print(checksum_address)
+    print(signature)
     skale.validator_service.link_node_address(checksum_address,
                                               signature,
                                               wait_for=True)
@@ -304,6 +322,37 @@ def skip_evm_month(ctx, month_to_skip):
     skale.time_helpers_with_debug.skip_time(time_to_skip,
                                             wait_for=True)
     print('Success')
+
+
+@main.command()
+@click.argument('validator_id')
+@click.argument('address')
+def withdraw_bounty(ctx, validator_id, address):
+    """ Withdraw bounty from validator_id to address """
+    skale = ctx.obj['skale']
+    vid = int(validator_id)
+    skale.distributor.withdraw_bounty(vid, address, wait_for=True)
+    print('Success')
+
+
+@main.command()
+@click.argument('delegation_id')
+def request_undelegation(ctx, delegation_id):
+    """ Request undelagation for delegation provided by delegation_id """
+    skale = ctx.obj['skale']
+    did = int(delegation_id)
+    skale.delegation_controller.request_undelegation(did, wait_for=True)
+    print('Success')
+
+
+@main.command()
+@click.argument('holder_address')
+def get_locked_amount(ctx, holder_address):
+    """ Checks quantity of freezed tokens from holder_address holder account
+    """
+    skale = ctx.obj['skale']
+    res = skale.token_state.get_locked_amount(holder_address)
+    print(res)
 
 
 if __name__ == "__main__":

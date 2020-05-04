@@ -355,5 +355,26 @@ def get_locked_amount(ctx, holder_address):
     print(res)
 
 
+@main.command()
+@click.pass_context
+def launch_ts(ctx):
+    """ Get launch timestamp
+    """
+    skale = ctx.obj['skale']
+    res = skale.constants_holder.get_launch_timestamp()
+    print(res)
+
+
+@main.command()
+@click.argument('launch_timestamp')
+@click.pass_context
+def set_launch_ts(ctx, launch_timestamp):
+    """ Set launch timestamp value to launch_timestamp """
+    skale = ctx.obj['skale']
+    skale.constants_holder.set_launch_timestamp(int(launch_timestamp),
+                                                wait_for=True)
+    print('Success')
+
+
 if __name__ == "__main__":
     main()

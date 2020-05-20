@@ -376,5 +376,30 @@ def set_launch_ts(ctx, launch_timestamp):
     print('Success')
 
 
+@main.command()
+@click.pass_context
+def trusted_ids(ctx):
+    """ Get trusted validators ids list """
+    skale = ctx.obj['skale']
+    print(skale.validator_service.get_trusted_validator_ids())
+
+
+@main.command()
+@click.pass_context
+def disable_whitelist(ctx):
+    """ Disable whitelist. Master key only transaction """
+    skale = ctx.obj['skale']
+    skale.validator_service.disable_whitelist(wait_for=True)
+    print('Success')
+
+
+@main.command()
+@click.pass_context
+def use_whitelist(ctx):
+    """ Check if whitelist feature enabled """
+    skale = ctx.obj['skale']
+    print(skale.validator_service.get_use_whitelist())
+
+
 if __name__ == "__main__":
     main()

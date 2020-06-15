@@ -94,6 +94,7 @@ def show_wallet_info(skale, address=None):
     chs_address = Web3.toChecksumAddress(address)
     skale_balance = skale.token.get_balance(chs_address)
     eth_balance = check_ether_balance(skale.web3, chs_address)
+    print(f'Address: {address}')
     print('Balance {} SKL'.format(skale_balance / ETH_IN_WEI))
     print('Balance {} ETH'.format(eth_balance))
 

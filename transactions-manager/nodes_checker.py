@@ -14,7 +14,7 @@ skale = Skale(ENDPOINT, ABI_FILEPATH, wallet)
 
 
 for _ in range(0, 1000000):
-    nodes_ips = skale.nodes_data.get_active_node_ips()
+    nodes_ips = skale.nodes.get_active_node_ips()
     ips = []
     for ip in nodes_ips:
         ips.append(ip_from_bytes(ip))

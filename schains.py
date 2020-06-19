@@ -87,8 +87,8 @@ def save_info(schain_index, schain_info=None, wallet=None,
 
 
 def get_all_schains_names(skale):
-    schains_ids = skale.schains_data.get_all_schains_ids()
-    names = [skale.schains_data.get(sid).get('name')
+    schains_ids = skale.schains_internal.get_all_schains_ids()
+    names = [skale.schains.get(sid).get('name')
              for sid in schains_ids]
     return names
 
@@ -99,7 +99,7 @@ def show_all_schains_names(skale):
 
 
 def get_schain_info(skale, schain_name):
-    schain_struct = skale.schains_data.get_by_name(schain_name)
+    schain_struct = skale.schains.get_by_name(schain_name)
     schain_nodes = get_nodes_for_schain_config(skale, schain_name)
     return {'schain_struct': schain_struct, 'schain_nodes': schain_nodes}
 
@@ -136,9 +136,9 @@ def create_account(skale, skale_amount, eth_amount, debug=True):
 
 
 def show_all_schain_ids(skale):
-    schains_number = skale.schains_data.get_schains_number()
+    schains_number = skale.schains_internal.get_schains_number()
     print(f'There are {schains_number} schains')
-    schains_ids = skale.schains_data.get_all_schains_ids()
+    schains_ids = skale.schains_internal.get_all_schains_ids()
     print(schains_ids)
 
 

@@ -75,8 +75,8 @@ def schains_by_node(ctx, save_to):
 
     schains = []
     sizes = []
-    for node_id in skale.nodes_data.get_active_node_ids():
-        node = skale.nodes_data.get(node_id)
+    for node_id in skale.nodes.get_active_node_ids():
+        node = skale.nodes.get(node_id)
 
         node_struct = {
             'name': node['name'],
@@ -111,11 +111,11 @@ def show(ctx):
     skale = ctx.obj['skale']
 
     nodes_data = []
-    for _id in skale.nodes_data.get_active_node_ids():
-        data = skale.nodes_data.get(_id)
+    for _id in skale.nodes.get_active_node_ids():
+        data = skale.nodes.get(_id)
         name = data.get('name')
         ip = ip_from_bytes(data.get('ip'))
-        pub_key = skale.web3.toHex(data['publicKey'])
+        pub_key = data['publicKey']
         port = data.get('port')
         nodes_data.append((_id, name, ip, port, pub_key))
     print(nodes_data)
@@ -128,7 +128,7 @@ def remove(ctx, node_name):
     """ Command to remove node spcified by name """
     skale = ctx.obj['skale']
 
-    node_id = skale.nodes_data.node_name_to_index(node_name)
+    node_id = skale.nodes.node_name_to_index(node_name)
     skale.manager.delete_node_by_root(node_id, wait_for=True)
 
 

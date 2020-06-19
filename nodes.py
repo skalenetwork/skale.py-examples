@@ -115,7 +115,7 @@ def show(ctx):
         data = skale.nodes.get(_id)
         name = data.get('name')
         ip = ip_from_bytes(data.get('ip'))
-        pub_key = skale.web3.toHex(data['publicKey'])
+        pub_key = data['publicKey']
         port = data.get('port')
         nodes_data.append((_id, name, ip, port, pub_key))
     print(nodes_data)

@@ -2,8 +2,8 @@ import logging
 
 import click
 from skale import Skale
+from skale.utils.account_tools import check_ether_balance, send_ether
 from skale.utils.helper import init_default_logger
-from skale.utils.web3_utils import check_receipt
 
 from web3 import Web3
 from config import ENDPOINT, ABI_FILEPATH
@@ -25,47 +25,87 @@ def main(ctx, endpoint, abi_filepath):
     ctx.obj['skale'] = Skale(endpoint, abi_filepath, wallet)
 
 
-def token_transfer(skale, address_to, tokens_amount):
+def skale_token_transfer(skale, address_to, tokens_amount):
     address_from = Web3.toChecksumAddress(skale.wallet.address)
     address_to = Web3.toChecksumAddress(address_to)
     balance_from_before = skale.token.get_balance(address_from)
     balance_to_before = skale.token.get_balance(address_to)
-    print('Balance from before {}'.format(balance_from_before / ETH_IN_WEI))
-    print('Balance to before {}'.format(balance_to_before / ETH_IN_WEI))
+    print(
+        'Balance SKL from before {}'.format(balance_from_before / ETH_IN_WEI)
+    )
+    print('Balance SKL to before {}'.format(balance_to_before / ETH_IN_WEI))
 
-    receipt = skale.token.transfer(address_to, tokens_amount, wait_for=True)
+    tx_res = skale.token.transfer(address_to, tokens_amount, wait_for=True)
+    tx_res.raise_for_status()
 
     balance_from_after = skale.token.get_balance(address_from)
     balance_to_after = skale.token.get_balance(address_to)
-    print('Balance from after {}'.format(balance_from_after / ETH_IN_WEI))
-    print('Balance to after {}'.format(balance_to_after / ETH_IN_WEI))
-    print(f'Diff from account {balance_from_after - balance_from_before}')
-    print(f'Diff to account {balance_to_after - balance_to_before}')
-    return receipt
+    print('Balance SKL from after {}'.format(balance_from_after / ETH_IN_WEI))
+    print('Balance SKL to after {}'.format(balance_to_after / ETH_IN_WEI))
+    print(f'Diff SKL from account {balance_from_after - balance_from_before}')
+    print(f'Diff SKL to account {balance_to_after - balance_to_before}')
+
+
+def eth_token_transfer(web3, wallet, address_to, eth_amount):
+    address_from = Web3.toChecksumAddress(wallet.address)
+    address_to = Web3.toChecksumAddress(address_to)
+    balance_from_before = check_ether_balance(web3, address_from)
+    balance_to_before = check_ether_balance(web3, address_to)
+    print(
+        'Balance ETH from before {}'.format(balance_from_before)
+    )
+    print('Balance ETH to before {}'.format(balance_to_before))
+
+    send_ether(web3, wallet, address_to, eth_amount, wait_for=True)
+
+    balance_from_after = check_ether_balance(web3, address_from)
+    balance_to_after = check_ether_balance(web3, address_to)
+    print('Balance ETH from after {}'.format(balance_from_after))
+    print('Balance ETH to after {}'.format(balance_to_after))
+    print(f'Diff ETH from account {balance_from_after - balance_from_before}')
+    print(f'Diff ETH to account {balance_to_after - balance_to_before}')
+    pass
 
 
 @main.command()
 @click.pass_context
 @click.argument('address_to')
 @click.argument('tokens_amount', type=int)
-def transfer(ctx, address_to, tokens_amount):
-    """ Command for transfering tokens to address """
+def skale_transfer(ctx, address_to, tokens_amount):
+    """ Command for transfering SKL to account specified by address_to """
     skale = ctx.obj['skale']
-    receipt = token_transfer(skale, address_to, tokens_amount)
-    check_receipt(receipt)
-
-
-def show_skl_balance(skale):
-    address = Web3.toChecksumAddress(skale.wallet.address)
-    balance = skale.token.get_balance(address)
-    print('Balance {} SKL'.format(balance / ETH_IN_WEI))
+    skale_token_transfer(skale, address_to, tokens_amount * ETH_IN_WEI)
+    print('Success')
 
 
 @main.command()
 @click.pass_context
-def show(ctx):
+@click.argument('address_to')
+@click.argument('eth_amount', type=float)
+def eth_transfer(ctx, address_to, eth_amount):
+    """ Command for transfering ETH to account specified by address_to """
     skale = ctx.obj['skale']
-    show_skl_balance(skale)
+    eth_token_transfer(skale.web3, skale.wallet, address_to, eth_amount)
+    print('Success')
+
+
+def show_wallet_info(skale, address=None):
+    address = address or skale.wallet.address
+    chs_address = Web3.toChecksumAddress(address)
+    skale_balance = skale.token.get_balance(chs_address)
+    eth_balance = check_ether_balance(skale.web3, chs_address)
+    print(f'Address: {address}')
+    print('Balance {} SKL'.format(skale_balance / ETH_IN_WEI))
+    print('Balance {} ETH'.format(eth_balance))
+
+
+@main.command()
+@click.option('--address', help='Address to check account', default=None)
+@click.pass_context
+def show(ctx, address):
+    """ Command for displaying information about account """
+    skale = ctx.obj['skale']
+    show_wallet_info(skale, address)
 
 
 if __name__ == "__main__":

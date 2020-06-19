@@ -27,13 +27,14 @@ from enum import Enum
 import click
 
 from skale import Skale
-from skale.wallets import Web3Wallet
+from skale.schain_config.generator import get_nodes_for_schain_config
 from skale.utils.helper import init_default_logger
 from skale.utils.account_tools import (check_ether_balance,
                                        check_skale_balance, generate_account,
                                        send_ether, send_tokens)
 from skale.utils.constants import LONG_LINE
 from skale.utils.random_names.generator import generate_random_schain_name
+from skale.wallets import Web3Wallet
 from utils import init_wallet
 
 from config import ENDPOINT, ABI_FILEPATH, ETH_PRIVATE_KEY
@@ -97,9 +98,15 @@ def show_all_schains_names(skale):
     print('\n'.join(schain_names))
 
 
+def get_schain_info(skale, schain_name):
+    schain_struct = skale.schains_data.get_by_name(schain_name)
+    schain_nodes = get_nodes_for_schain_config(skale, schain_name)
+    return {'schain_struct': schain_struct, 'schain_nodes': schain_nodes}
+
+
 def create_schain(skale, wallet, nodes_type_name):
     lifetime_seconds = 12 * 3600  # 12 hours
-    nodes_type_idx = int(SchainType[nodes_type_name])
+    nodes_type_idx = int(SchainType[nodes_type_name].value)
     print(nodes_type_idx)
     schain_name = generate_random_schain_name()
     price_in_wei = skale.schains.get_schain_price(nodes_type_idx,
@@ -111,10 +118,7 @@ def create_schain(skale, wallet, nodes_type_name):
         schain_name,
         wait_for=True
     )
-
-    schain_struct = skale.schains_data.get_by_name(schain_name)
-    schain_nodes = skale.schains_data.get_nodes_for_schain_config(schain_name)
-    return {'schain_struct': schain_struct, 'schain_nodes': schain_nodes}
+    return get_schain_info(skale, schain_name)
 
 
 def create_account(skale, skale_amount, eth_amount, debug=True):
@@ -146,13 +150,18 @@ def show_all_schain_ids(skale):
               help='Amount of skale to add to new accounts')
 @click.option('--eth-amount', default=10,
               help='Amount of eth to add to new accounts')
+@click.option('--type', default=SchainType.TEST2.name,
+              type=click.Choice([n_type.name for n_type in SchainType],
+                                case_sensitive=False),
+              help='Nodes type (tiny/small/medium/test2/test4) for schain')
 @click.pass_context
-def create_with_account(ctx, amount, save_to, skale_amount, eth_amount):
+def create_with_account(ctx, amount, save_to, skale_amount, eth_amount, type):
     """ Command that creates new accounts with schains """
     skale = ctx.obj['skale']
+    print(save_to)
     for i in range(amount):
         wallet, private_key = create_account(skale, skale_amount, eth_amount)
-        schain_info = create_schain(skale, wallet)
+        schain_info = create_schain(skale, wallet, type)
         save_info(i, schain_info, wallet, private_key, save_to)
         logger.info(LONG_LINE)
     show_all_schain_ids(skale)
@@ -194,7 +203,17 @@ def remove(ctx, schain_name):
 def show(ctx):
     """ Command that show all schains ids """
     skale = ctx.obj['skale']
-    show_all_schain_ids(skale)
+    show_all_schains_names(skale)
+
+
+@main.command()
+@click.pass_context
+@click.argument('schain_name')
+def info(ctx, schain_name):
+    """ Command that show all schains ids """
+    skale = ctx.obj['skale']
+    info = get_schain_info(skale, schain_name)
+    print(json.dumps(info, indent=2))
 
 
 if __name__ == "__main__":

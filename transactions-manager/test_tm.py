@@ -13,6 +13,7 @@ skale = Skale(ENDPOINT, ABI_FILEPATH, wallet)
 
 print('Address: ', wallet.address)
 
+
 def main():
     monitors = []
     for _ in range(0, 5):
@@ -21,6 +22,7 @@ def main():
         monitors.append(monitor)
     for monitor in monitors:
         monitor.join()
+
 
 def create_nodes():
     for _ in range(0, 100):
@@ -37,5 +39,4 @@ def create_node():
 
 
 if __name__ == "__main__":
-    create_node()
-    #main()
+    main()

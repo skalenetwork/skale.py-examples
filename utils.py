@@ -20,19 +20,25 @@
 import random
 import string
 
-from skale.wallets import RPCWallet
-from skale.wallets import Web3Wallet
+from skale.wallets import LedgerWallet, RPCWallet, Web3Wallet
 from skale.utils.web3_utils import init_web3
 
-from config import TM_URL, ETH_PRIVATE_KEY
+from config import TM_URL, ETH_PRIVATE_KEY, LEDGER
 
 
 def init_wallet(endpoint):
-    if not TM_URL and not ETH_PRIVATE_KEY:
-        raise Exception('You should provide TM_URL or ETH_PRIVATE_KEY to init wallet')
     if TM_URL:
         return RPCWallet(TM_URL)
     web3 = init_web3(endpoint)
+    if LEDGER:
+        return LedgerWallet(web3, debug=True)
+    if ETH_PRIVATE_KEY:
+        return Web3Wallet(ETH_PRIVATE_KEY, web3)
+
+        raise Exception(
+            'You should provide TM_URL or ETH_PRIVATE_KEY or '
+            'set LEDGER=1 to init wallet'
+        )
     return Web3Wallet(ETH_PRIVATE_KEY, web3)
 
 
@@ -41,7 +47,8 @@ def generate_random_ip():
 
 
 def generate_random_name(len=8):
-    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=len))
+    return ''.join(
+        random.choices(string.ascii_uppercase + string.digits, k=len))
 
 
 def generate_random_port():
@@ -49,8 +56,8 @@ def generate_random_port():
 
 
 def generate_random_node_data():
-    return generate_random_ip(), generate_random_ip(), generate_random_port(), \
-        generate_random_name()
+    return generate_random_ip(), generate_random_ip(), \
+        generate_random_port(), generate_random_name()
 
 
 def generate_random_schain_data():

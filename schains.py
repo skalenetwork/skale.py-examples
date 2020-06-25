@@ -33,6 +33,7 @@ from skale.utils.account_tools import (check_ether_balance,
                                        check_skale_balance, generate_account,
                                        send_ether, send_tokens)
 from skale.utils.constants import LONG_LINE
+from skale.utils.web3_utils import to_checksum_address
 from skale.utils.random_names.generator import generate_random_schain_name
 from skale.wallets import Web3Wallet
 from utils import init_wallet
@@ -104,20 +105,27 @@ def get_schain_info(skale, schain_name):
     return {'schain_struct': schain_struct, 'schain_nodes': schain_nodes}
 
 
-def create_schain(skale, wallet, nodes_type_name):
+def create_schain(skale, wallet, nodes_type_name, by_foundation=False):
     lifetime_seconds = 12 * 3600  # 12 hours
     nodes_type_idx = int(SchainType[nodes_type_name].value)
     print(nodes_type_idx)
     schain_name = generate_random_schain_name()
-    price_in_wei = skale.schains.get_schain_price(nodes_type_idx,
-                                                  lifetime_seconds)
-    skale.manager.create_schain(
-        lifetime_seconds,
-        nodes_type_idx,
-        price_in_wei,
-        schain_name,
-        wait_for=True
-    )
+    if by_foundation:
+        skale.schains.add_schain_by_foundation(
+            lifetime_seconds,
+            nodes_type_idx,
+            0,
+            schain_name
+        )
+    else:
+        price_in_wei = skale.schains.get_schain_price(nodes_type_idx,
+                                                      lifetime_seconds)
+        skale.manager.create_schain(
+            lifetime_seconds,
+            nodes_type_idx,
+            price_in_wei,
+            schain_name
+        )
     return get_schain_info(skale, schain_name)
 
 
@@ -189,6 +197,29 @@ def create(ctx, amount, save_to, type):
 
 
 @main.command()
+@click.argument('amount', default=1)
+@click.option('--save-to', default='./creds',
+              help='Directory to save schains data')
+@click.option('--type', default=SchainType.TEST2.name,
+              type=click.Choice([n_type.name for n_type in SchainType],
+                                case_sensitive=False),
+              help='Nodes type (tiny/small/medium/test2/test4) for schain')
+@click.pass_context
+def create_by_foundation(ctx, amount, save_to, type):
+    """
+    Command that creates schains
+    from foundation account specified by ETH_PRIVATE_KEY
+    """
+    skale = ctx.obj['skale']
+    for i in range(amount):
+        schain_info = create_schain(skale, skale.wallet, type,
+                                    by_foundation=True)
+        save_info(i, schain_info, skale.wallet, save_to)
+        logger.info(LONG_LINE)
+    show_all_schains_names(skale)
+
+
+@main.command()
 @click.argument('schain_name')
 @click.pass_context
 def remove(ctx, schain_name):
@@ -214,6 +245,18 @@ def info(ctx, schain_name):
     skale = ctx.obj['skale']
     info = get_schain_info(skale, schain_name)
     print(json.dumps(info, indent=2))
+
+
+@main.command()
+@click.pass_context
+@click.argument('address')
+def grant_role(ctx, address):
+    """ Command for granting creator role to address """
+    skale = ctx.obj['skale']
+    address = to_checksum_address(address)
+    skale.schains.grant_role(skale.schains.schain_creator_role(),
+                             address)
+    print('Success')
 
 
 if __name__ == "__main__":

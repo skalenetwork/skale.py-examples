@@ -158,7 +158,7 @@ def trusted(ctx, validator_id):
     """ Check if validator specified by id trused """
     """(owner only transaction)"""
     skale = ctx.obj['skale']
-    res = skale.validator_service._is_validator_trusted(int(validator_id))
+    res = skale.validator_service._is_authorized_validator(int(validator_id))
     print(res)
 
 

@@ -85,7 +85,7 @@ def schains_by_node(ctx, save_to):
             'publicIP': ip_from_bytes(node['publicIP']),
         }
 
-        schains_for_node = skale.schains_data.get_schains_for_node(node_id)
+        schains_for_node = skale.schains.get_schains_for_node(node_id)
         schains.append({
             'schains': schains_for_node,
             'amount': len(schains_for_node),

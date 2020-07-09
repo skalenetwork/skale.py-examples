@@ -401,5 +401,21 @@ def use_whitelist(ctx):
     print(skale.validator_service.get_use_whitelist())
 
 
+@main.command()
+@click.pass_context
+def get_reward_period(ctx):
+    """ Get reward period """
+    skale = ctx.obj['skale']
+    print(skale.constants_holder.get_reward_period())
+
+
+@main.command()
+@click.pass_context
+def get_delta_period(ctx):
+    """ Get delta period """
+    skale = ctx.obj['skale']
+    print(skale.constants_holder.get_delta_period())
+
+
 if __name__ == "__main__":
     main()

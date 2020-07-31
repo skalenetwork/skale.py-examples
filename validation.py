@@ -50,6 +50,24 @@ def main(ctx, endpoint, abi_filepath):
     ctx.obj['skale'] = Skale(endpoint, abi_filepath, wallet)
 
 
+def get_revert_reason(skale, tx_hash):
+    tx = skale.web3.eth.getTransaction(tx_hash)
+    try:
+        skale.web3.eth.call({
+            'from': tx['from'],
+            'nonce': tx['nonce'],
+            'value': tx['value'],
+            'gas': tx['gas'],
+            'gasPrice': tx['gasPrice'],
+            'to': tx['to'],
+            'data': tx['input']},
+            tx['blockNumber'])
+    except ValueError as e:
+        error = str(e).replace("'", '"')
+        return json.loads(error)['message']
+    return 'Ok'
+
+
 @main.command()
 @click.argument('private_key')
 def address_from_key(private_key):
@@ -191,8 +209,20 @@ def set_msr(ctx, new_msr):
 def linked_addresses(ctx, validator_id):
     """ Get addresses that linked to validator with provided id """
     skale = ctx.obj['skale']
+    skale.validator_service.get_linked_addresses_by_validator_address
     vid = int(validator_id)
     res = skale.validator_service.get_linked_addresses_by_validator_id(vid)
+    print(res)
+
+
+@main.command()
+@click.argument('address')
+@click.pass_context
+def linked_addresses_by_address(ctx, address):
+    """ Get addresses that linked to validator with provided id """
+    skale = ctx.obj['skale']
+    checksum_address = to_checksum_address(address)
+    res = skale.validator_service.get_linked_addresses_by_validator_address(checksum_address)
     print(res)
 
 
@@ -202,7 +232,7 @@ def linked_addresses(ctx, validator_id):
 def validator_id_from_address(ctx, address):
     """ Get validator id from provided address """
     skale = ctx.obj['skale']
-    checksum_address = address
+    checksum_address = to_checksum_address(address)
     res = skale.validator_service.validator_id_by_address(checksum_address)
     print(res)
 
@@ -399,6 +429,15 @@ def use_whitelist(ctx):
     """ Check if whitelist feature enabled """
     skale = ctx.obj['skale']
     print(skale.validator_service.get_use_whitelist())
+
+
+@main.command()
+@click.pass_context
+@click.argument('tx_hash')
+def revert_reason(ctx, tx_hash):
+    """ Check revert reason for particular transaction """
+    skale = ctx.obj['skale']
+    print(get_revert_reason(skale, tx_hash))
 
 
 if __name__ == "__main__":

@@ -225,7 +225,7 @@ def create_by_foundation(ctx, amount, save_to, type):
 def remove(ctx, schain_name):
     """ Command that removes schain by name """
     skale = ctx.obj['skale']
-    skale.manager.delete_schain(schain_name, wait_for=True)
+    skale.manager.delete_schain(schain_name, wait_for=True, gas_price=4500000000)
     print(f'sChain {schain_name} removed!')
 
 

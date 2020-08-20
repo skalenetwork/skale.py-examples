@@ -129,7 +129,8 @@ def remove(ctx, node_name):
     skale = ctx.obj['skale']
 
     node_id = skale.nodes.node_name_to_index(node_name)
-    skale.manager.delete_node_by_root(node_id, wait_for=True)
+    skale.manager.node_exit(node_id, wait_for=True, gas_price=4500000000)
+    # skale.manager.delete_node_by_root(node_id, wait_for=True)
 
 
 if __name__ == "__main__":

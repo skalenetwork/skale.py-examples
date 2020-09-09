@@ -26,6 +26,7 @@ import click
 from skale import Skale
 from skale.utils.helper import ip_from_bytes, init_default_logger
 from skale.utils.constants import LONG_LINE
+from skale.contracts.manager.nodes import NodeStatus
 
 from utils import init_wallet, generate_random_node_data
 from config import ENDPOINT, ABI_FILEPATH
@@ -105,20 +106,29 @@ def schains_by_node(ctx, save_to):
 
 
 @main.command()
+@click.option('--all-nodes', is_flag=True, default=False, help='Show all nodes')
 @click.pass_context
-def show(ctx):
+def show(ctx, all_nodes):
     """ Command to show id name and ip of active nodes """
     skale = ctx.obj['skale']
 
+    if all_nodes: # todo: tmp fix, remove it later
+        number_of_nodes = skale.nodes.contract.functions.getNumberOfNodes().call()
+        ids = range(0, number_of_nodes)
+    else:
+        ids = skale.nodes.get_active_node_ids()
+
     nodes_data = []
-    for _id in skale.nodes.get_active_node_ids():
+    for _id in ids:
         data = skale.nodes.get(_id)
         name = data.get('name')
         ip = ip_from_bytes(data.get('ip'))
         pub_key = data['publicKey']
         port = data.get('port')
-        nodes_data.append((_id, name, ip, port, pub_key))
-    print(nodes_data)
+        node_status = skale.nodes.contract.functions.getNodeStatus(_id).call()
+        nodes_data.append((_id, name, ip, port, pub_key, NodeStatus(node_status).name))
+    print(json.dumps(nodes_data, indent=4))
+    print(f'Nodes: {len(nodes_data)}')
 
 
 @main.command()

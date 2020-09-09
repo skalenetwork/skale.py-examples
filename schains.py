@@ -27,7 +27,6 @@ from enum import Enum
 import click
 
 from skale import Skale
-from skale.schain_config.generator import get_nodes_for_schain_config
 from skale.utils.helper import init_default_logger
 from skale.utils.account_tools import (check_ether_balance,
                                        check_skale_balance, generate_account,

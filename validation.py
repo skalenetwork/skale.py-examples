@@ -186,6 +186,20 @@ def set_msr(ctx, new_msr):
 
 
 @main.command()
+@click.argument('new_dp')
+@click.pass_context
+def set_delegation_period(ctx, new_dp):
+    """ Set delegation period (owner only transaction) """
+    skale = ctx.obj['skale']
+    skale.delegation_period_manager.set_delegation_period(
+        months_count=int(new_dp),
+        stake_multiplier=150,
+        wait_for=True
+    )
+    print('Success')
+
+
+@main.command()
 @click.argument('validator_id')
 @click.pass_context
 def linked_addresses(ctx, validator_id):

@@ -415,5 +415,28 @@ def use_whitelist(ctx):
     print(skale.validator_service.get_use_whitelist())
 
 
+@main.command()
+@click.argument('validator-id', type=int)
+@click.pass_context
+def delegations_by_validator_id(ctx, validator_id):
+    skale = ctx.obj['skale']
+    print(
+        skale.delegation_controller._get_delegation_ids_by_validator(
+            validator_id)
+    )
+
+
+@main.command()
+@click.argument('delegation-id', type=int)
+@click.pass_context
+def delegation_by_id(ctx, delegation_id):
+    skale = ctx.obj['skale']
+    print(
+        skale.delegation_controller.get_delegation_full(
+            delegation_id
+        )
+    )
+
+
 if __name__ == "__main__":
     main()

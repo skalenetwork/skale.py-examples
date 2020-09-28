@@ -27,6 +27,7 @@ from enum import Enum
 import click
 
 from skale import Skale
+from skale.schain_config.generator import get_nodes_for_schain
 from skale.utils.helper import init_default_logger
 from skale.utils.account_tools import (check_ether_balance,
                                        check_skale_balance, generate_account,
@@ -100,7 +101,7 @@ def show_all_schains_names(skale):
 
 def get_schain_info(skale, schain_name):
     schain_struct = skale.schains.get_by_name(schain_name)
-    schain_nodes = get_nodes_for_schain_config(skale, schain_name)
+    schain_nodes = get_nodes_for_schain(skale, schain_name)
     return {'schain_struct': schain_struct, 'schain_nodes': schain_nodes}
 
 
@@ -123,7 +124,9 @@ def create_schain(skale, wallet, nodes_type_name, by_foundation=False):
             lifetime_seconds,
             nodes_type_idx,
             price_in_wei,
-            schain_name
+            schain_name,
+            skip_dry_run=True,
+            gas_limit=7500000
         )
     return get_schain_info(skale, schain_name)
 
@@ -224,7 +227,8 @@ def create_by_foundation(ctx, amount, save_to, type):
 def remove(ctx, schain_name):
     """ Command that removes schain by name """
     skale = ctx.obj['skale']
-    skale.manager.delete_schain(schain_name, wait_for=True, gas_price=4500000000)
+    skale.manager.delete_schain(schain_name, wait_for=True,
+                                gas_price=4500000000)
     print(f'sChain {schain_name} removed!')
 
 

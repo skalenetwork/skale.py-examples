@@ -33,11 +33,12 @@ from skale.utils.account_tools import (check_ether_balance,
                                        check_skale_balance, generate_account,
                                        send_ether, send_tokens)
 from skale.utils.constants import LONG_LINE
-from skale.utils.web3_utils import to_checksum_address
+from skale.utils.helper import ip_from_bytes
 from skale.utils.random_names.generator import generate_random_schain_name
+from skale.utils.web3_utils import to_checksum_address
 from skale.wallets import Web3Wallet
-from utils import init_wallet
 
+from utils import init_wallet
 from config import ENDPOINT, ABI_FILEPATH, ETH_PRIVATE_KEY
 
 
@@ -102,6 +103,9 @@ def show_all_schains_names(skale):
 def get_schain_info(skale, schain_name):
     schain_struct = skale.schains.get_by_name(schain_name)
     schain_nodes = get_nodes_for_schain(skale, schain_name)
+    for node_info in schain_nodes:
+        node_info['ip'] = ip_from_bytes(node_info['ip'])
+        node_info['publicIP'] = ip_from_bytes(node_info['publicIP'])
     return {'schain_struct': schain_struct, 'schain_nodes': schain_nodes}
 
 

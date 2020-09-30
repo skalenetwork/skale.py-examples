@@ -211,6 +211,16 @@ def linked_addresses(ctx, validator_id):
 
 
 @main.command()
+@click.argument('validator_id')
+@click.pass_context
+def validator_info(ctx, validator_id):
+    """ Get validator info from id """
+    skale = ctx.obj['skale']
+    res = skale.validator_service.get(int(validator_id))
+    print(json.dumps(res, indent=4))
+
+
+@main.command()
 @click.argument('address')
 @click.pass_context
 def validator_id_from_address(ctx, address):

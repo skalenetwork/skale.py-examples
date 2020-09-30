@@ -27,6 +27,7 @@ from enum import Enum
 import click
 
 from skale import Skale
+from skale.dataclasses.skaled_ports import SkaledPorts
 from skale.schain_config.generator import get_nodes_for_schain
 from skale.utils.helper import init_default_logger
 from skale.utils.account_tools import (check_ether_balance,
@@ -100,12 +101,23 @@ def show_all_schains_names(skale):
     print('\n'.join(schain_names))
 
 
+def get_node_schain_ports_info(base_port):
+    return {
+        rec.name: base_port + rec.value
+        for rec in SkaledPorts
+    }
+
+
 def get_schain_info(skale, schain_name):
     schain_struct = skale.schains.get_by_name(schain_name)
     schain_nodes = get_nodes_for_schain(skale, schain_name)
     for node_info in schain_nodes:
         node_info['ip'] = ip_from_bytes(node_info['ip'])
         node_info['publicIP'] = ip_from_bytes(node_info['publicIP'])
+        ports = get_node_schain_ports_info(node_info['port'])
+        node_info['basePort'] = node_info['port']
+        node_info.pop('port')
+        node_info['ports'] = ports
     return {'schain_struct': schain_struct, 'schain_nodes': schain_nodes}
 
 

@@ -126,6 +126,7 @@ def delegations_by_validator(ctx):
 def accept_request(ctx, delegation_id):
     """ Accept delegation specified by id """
     skale = ctx.obj['skale']
+    delegation_id = int(delegation_id)
     skale.delegation_controller.accept_pending_delegation(delegation_id,
                                                           wait_for=True)
 

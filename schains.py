@@ -278,5 +278,16 @@ def grant_role(ctx, address):
     print('Success')
 
 
+@main.command()
+@click.pass_context
+@click.argument('schain_name')
+def is_last_dkg_successful(ctx, schain_name):
+    """ Checks if the last dkg procedure for schain was succesful """
+    skale = ctx.obj['skale']
+    group_index = skale.schains.name_to_id(schain_name)
+    res = skale.dkg.is_last_dkg_successful(group_index)
+    print(res)
+
+
 if __name__ == "__main__":
     main()

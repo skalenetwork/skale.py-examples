@@ -24,14 +24,12 @@ import click
 
 from skale import Skale
 from skale.utils.helper import init_default_logger
-from skale.utils.contracts_provision.main import _skip_evm_time
 from skale.utils.web3_utils import to_checksum_address
 from skale.wallets import Web3Wallet
 from skale.utils.web3_utils import private_key_to_address
 from web3 import Web3
 
 from config import ENDPOINT, ABI_FILEPATH
-from schains import create_account
 from utils import init_wallet
 
 MONTH_IN_SECONDS = (60 * 60 * 24 * 31) + 100
@@ -48,12 +46,6 @@ def main(ctx, endpoint, abi_filepath):
     ctx.ensure_object(dict)
     wallet = init_wallet(endpoint)
     ctx.obj['skale'] = Skale(endpoint, abi_filepath, wallet)
-
-
-@main.command()
-@click.argument('private_key')
-def address_from_key(private_key):
-    print(private_key_to_address(private_key))
 
 
 @main.command()
@@ -81,35 +73,6 @@ def ls(ctx):
 
 
 @main.command()
-@click.argument('validator_id')
-@click.argument('tokens_amount', default=None)
-@click.argument('period', default=3)
-@click.pass_context
-def delegate(ctx, validator_id, tokens_amount, period):
-    """ Delegate tokens to validator specified by id """
-    skale = ctx.obj['skale']
-    if tokens_amount is None:
-        tokens_amount = skale.constants_holder.msr()
-    skale.delegation_controller.delegate(
-        validator_id=int(validator_id),
-        amount=int(tokens_amount),
-        delegation_period=int(period),
-        info='Test delegate',
-        wait_for=True
-    )
-
-
-@main.command()
-@click.pass_context
-def delegations_by_holder(ctx):
-    """ Show delegations by holder """
-    skale = ctx.obj['skale']
-    res = skale.delegation_controller.get_all_delegations_by_holder(
-        skale.wallet.address)
-    print(res)
-
-
-@main.command()
 @click.pass_context
 def delegations_by_validator(ctx):
     """ Show delegations by validator """
@@ -132,17 +95,6 @@ def accept_request(ctx, delegation_id):
 
 
 @main.command()
-@click.pass_context
-def send_funds(ctx):
-    skale = ctx.obj['skale']
-    skale_amount = 2000
-    eth_amount = 3
-    wallet, private_key = create_account(skale, skale_amount, eth_amount)
-    print(wallet.address)
-    print(private_key)
-
-
-@main.command()
 @click.argument('validator_id')
 @click.pass_context
 def whitelist(ctx, validator_id):
@@ -161,43 +113,6 @@ def trusted(ctx, validator_id):
     skale = ctx.obj['skale']
     res = skale.validator_service._is_authorized_validator(int(validator_id))
     print(res)
-
-
-@main.command()
-@click.argument('time_to_skip')
-@click.pass_context
-def skip_evm_time_ganache(ctx, time_to_skip):
-    """ Skip EVM time to activate delegation """
-    """(works only for ganache)"""
-    skale = ctx.obj['skale']
-    _skip_evm_time(skale.web3, time_to_skip)
-    print(f'Skipped {time_to_skip} seconds')
-
-
-@main.command()
-@click.argument('new_msr')
-@click.pass_context
-def set_msr(ctx, new_msr):
-    """ Set minimum stacking amount (owner only transaction) """
-    skale = ctx.obj['skale']
-    skale.constants_holder._set_msr(
-        new_msr=int(new_msr),
-        wait_for=True
-    )
-
-
-@main.command()
-@click.argument('new_dp')
-@click.pass_context
-def set_delegation_period(ctx, new_dp):
-    """ Set delegation period (owner only transaction) """
-    skale = ctx.obj['skale']
-    skale.delegation_period_manager.set_delegation_period(
-        months_count=int(new_dp),
-        stake_multiplier=150,
-        wait_for=True
-    )
-    print('Success')
 
 
 @main.command()
@@ -319,111 +234,10 @@ def is_main_address(ctx, address):
 
 @main.command()
 @click.pass_context
-def get_current_month(ctx):
-    """ Get current month """
-    skale = ctx.obj['skale']
-    current_month = skale.time_helpers_with_debug.get_current_month()
-    print(f'Current month: {current_month}')
-
-
-@main.command()
-@click.argument('time-to-skip')
-@click.pass_context
-def skip_evm_time(ctx, time_to_skip):
-    """ Skip time_to_skip seconds """
-    skale = ctx.obj['skale']
-    skale.time_helpers_with_debug.skip_time(int(time_to_skip),
-                                            wait_for=True)
-    print('Success')
-
-
-@main.command()
-@click.argument('month_to_skip')
-@click.pass_context
-def skip_evm_month(ctx, month_to_skip):
-    """ Skip month_to_skip months"""
-    skale = ctx.obj['skale']
-    time_to_skip = MONTH_IN_SECONDS * int(month_to_skip)
-    skale.time_helpers_with_debug.skip_time(time_to_skip,
-                                            wait_for=True)
-    print('Success')
-
-
-@main.command()
-@click.argument('validator_id')
-@click.argument('address')
-def withdraw_bounty(ctx, validator_id, address):
-    """ Withdraw bounty from validator_id to address """
-    skale = ctx.obj['skale']
-    vid = int(validator_id)
-    skale.distributor.withdraw_bounty(vid, address, wait_for=True)
-    print('Success')
-
-
-@main.command()
-@click.argument('delegation_id')
-def request_undelegation(ctx, delegation_id):
-    """ Request undelagation for delegation provided by delegation_id """
-    skale = ctx.obj['skale']
-    did = int(delegation_id)
-    skale.delegation_controller.request_undelegation(did, wait_for=True)
-    print('Success')
-
-
-@main.command()
-@click.argument('holder_address')
-def get_locked_amount(ctx, holder_address):
-    """ Checks quantity of freezed tokens from holder_address holder account
-    """
-    skale = ctx.obj['skale']
-    res = skale.token_state.get_locked_amount(holder_address)
-    print(res)
-
-
-@main.command()
-@click.pass_context
-def launch_ts(ctx):
-    """ Get launch timestamp
-    """
-    skale = ctx.obj['skale']
-    res = skale.constants_holder.get_launch_timestamp()
-    print(res)
-
-
-@main.command()
-@click.argument('launch_timestamp')
-@click.pass_context
-def set_launch_ts(ctx, launch_timestamp):
-    """ Set launch timestamp value to launch_timestamp """
-    skale = ctx.obj['skale']
-    skale.constants_holder.set_launch_timestamp(int(launch_timestamp),
-                                                wait_for=True)
-    print('Success')
-
-
-@main.command()
-@click.pass_context
 def trusted_ids(ctx):
     """ Get trusted validators ids list """
     skale = ctx.obj['skale']
     print(skale.validator_service.get_trusted_validator_ids())
-
-
-@main.command()
-@click.pass_context
-def disable_whitelist(ctx):
-    """ Disable whitelist. Master key only transaction """
-    skale = ctx.obj['skale']
-    skale.validator_service.disable_whitelist(wait_for=True)
-    print('Success')
-
-
-@main.command()
-@click.pass_context
-def use_whitelist(ctx):
-    """ Check if whitelist feature enabled """
-    skale = ctx.obj['skale']
-    print(skale.validator_service.get_use_whitelist())
 
 
 @main.command()
@@ -434,18 +248,6 @@ def delegations_by_validator_id(ctx, validator_id):
     print(
         skale.delegation_controller._get_delegation_ids_by_validator(
             validator_id)
-    )
-
-
-@main.command()
-@click.argument('delegation-id', type=int)
-@click.pass_context
-def delegation_by_id(ctx, delegation_id):
-    skale = ctx.obj['skale']
-    print(
-        skale.delegation_controller.get_delegation_full(
-            delegation_id
-        )
     )
 
 

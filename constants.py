@@ -24,10 +24,8 @@ import click
 from skale import Skale
 from skale.utils.helper import init_default_logger
 from skale.utils.contracts_provision.main import _skip_evm_time
-from skale.utils.web3_utils import private_key_to_address
 
 from config import ENDPOINT, ABI_FILEPATH
-from schains import create_account
 from utils import init_wallet
 
 MONTH_IN_SECONDS = (60 * 60 * 24 * 31) + 100
@@ -44,23 +42,6 @@ def main(ctx, endpoint, abi_filepath):
     ctx.ensure_object(dict)
     wallet = init_wallet(endpoint)
     ctx.obj['skale'] = Skale(endpoint, abi_filepath, wallet)
-
-
-@main.command()
-@click.argument('private_key')
-def address_from_key(private_key):
-    print(private_key_to_address(private_key))
-
-
-@main.command()
-@click.pass_context
-def send_funds(ctx):
-    skale = ctx.obj['skale']
-    skale_amount = 2000
-    eth_amount = 3
-    wallet, private_key = create_account(skale, skale_amount, eth_amount)
-    print(wallet.address)
-    print(private_key)
 
 
 @main.command()

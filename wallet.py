@@ -119,7 +119,7 @@ def show_wallet_info(skale, address=None):
 @main.command()
 @click.option('--address', help='Address to check account', default=None)
 @click.pass_context
-def show(ctx, address):
+def info(ctx, address):
     """ Command for displaying information about account """
     skale = ctx.obj['skale']
     show_wallet_info(skale, address)

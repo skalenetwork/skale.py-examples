@@ -8,8 +8,7 @@ from skale.utils.web3_utils import private_key_to_address
 from web3 import Web3
 
 from config import ENDPOINT, ABI_FILEPATH
-from schains import create_account
-from utils import init_wallet
+from utils import create_account, init_wallet
 
 init_default_logger()
 logger = logging.getLogger(__name__)
@@ -83,7 +82,6 @@ def eth_token_transfer(web3, wallet, address_to, eth_amount):
     print('Balance ETH to after {}'.format(balance_to_after))
     print(f'Diff ETH from account {balance_from_after - balance_from_before}')
     print(f'Diff ETH to account {balance_to_after - balance_to_before}')
-    pass
 
 
 @main.command()

@@ -30,17 +30,14 @@ from skale import Skale
 from skale.dataclasses.skaled_ports import SkaledPorts
 from skale.schain_config.generator import get_nodes_for_schain
 from skale.utils.helper import init_default_logger
-from skale.utils.account_tools import (check_ether_balance,
-                                       check_skale_balance, generate_account,
-                                       send_ether, send_tokens)
+
 from skale.utils.constants import LONG_LINE
 from skale.utils.helper import ip_from_bytes
 from skale.utils.random_names.generator import generate_random_schain_name
 from skale.utils.web3_utils import to_checksum_address
-from skale.wallets import Web3Wallet
 
-from utils import init_wallet
-from config import ENDPOINT, ABI_FILEPATH, ETH_PRIVATE_KEY
+from utils import create_account, init_wallet
+from config import ENDPOINT, ABI_FILEPATH
 
 
 init_default_logger()
@@ -145,20 +142,6 @@ def create_schain(skale, wallet, nodes_type_name, by_foundation=False):
             gas_limit=7500000
         )
     return get_schain_info(skale, schain_name)
-
-
-def create_account(skale, skale_amount, eth_amount, debug=True):
-    base_wallet = Web3Wallet(ETH_PRIVATE_KEY, skale.web3)
-    wallet_dict = generate_account(skale.web3)
-    wallet = Web3Wallet(wallet_dict['private_key'], skale.web3)
-
-    send_tokens(skale, base_wallet, wallet.address, skale_amount, debug)
-    send_ether(skale.web3, base_wallet, wallet.address, eth_amount, debug)
-
-    if debug:
-        check_ether_balance(skale.web3, wallet.address)
-        check_skale_balance(skale, wallet.address)
-    return wallet, wallet_dict['private_key']
 
 
 def show_all_schain_ids(skale):

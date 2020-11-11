@@ -233,6 +233,18 @@ def remove(ctx, schain_name):
 
 @main.command()
 @click.pass_context
+def remove_all(ctx):
+    """ Command that removes all schains """
+    skale = ctx.obj['skale']
+    cnt = 0
+    for sname in get_all_schains_names(skale):
+        skale.manager.delete_schain(sname)
+        cnt += 1
+    print(f'Success. {cnt} schains were removed')
+
+
+@main.command()
+@click.pass_context
 def show(ctx):
     """ Command that show all schains ids """
     skale = ctx.obj['skale']

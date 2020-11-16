@@ -26,6 +26,7 @@ load_dotenv()
 ENDPOINT = os.environ['ENDPOINT']
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 ABI_FILEPATH = os.path.join(DIR_PATH, 'manager.json')
+IMA_ABI_FILEPATH = os.path.join(DIR_PATH, 'ima.json')
 TM_URL = os.environ.get('TM_URL')
 ETH_PRIVATE_KEY = os.environ.get('ETH_PRIVATE_KEY')
 LEDGER = os.environ.get('LEDGER')

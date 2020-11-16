@@ -4,10 +4,11 @@ import click
 from skale import Skale
 from skale.utils.account_tools import check_ether_balance, send_ether
 from skale.utils.helper import init_default_logger
-
+from skale.utils.web3_utils import private_key_to_address
 from web3 import Web3
+
 from config import ENDPOINT, ABI_FILEPATH
-from utils import init_wallet
+from utils import create_account, init_wallet
 
 init_default_logger()
 logger = logging.getLogger(__name__)
@@ -23,6 +24,23 @@ def main(ctx, endpoint, abi_filepath):
     ctx.ensure_object(dict)
     wallet = init_wallet(endpoint)
     ctx.obj['skale'] = Skale(endpoint, abi_filepath, wallet)
+
+
+@main.command()
+@click.argument('private_key')
+def address_from_key(private_key):
+    print(private_key_to_address(private_key))
+
+
+@main.command()
+@click.pass_context
+def send_funds(ctx):
+    skale = ctx.obj['skale']
+    skale_amount = 2000
+    eth_amount = 3
+    wallet, private_key = create_account(skale, skale_amount, eth_amount)
+    print(wallet.address)
+    print(private_key)
 
 
 def skale_token_transfer(skale, address_to, tokens_amount):
@@ -64,7 +82,6 @@ def eth_token_transfer(web3, wallet, address_to, eth_amount):
     print('Balance ETH to after {}'.format(balance_to_after))
     print(f'Diff ETH from account {balance_from_after - balance_from_before}')
     print(f'Diff ETH to account {balance_to_after - balance_to_before}')
-    pass
 
 
 @main.command()
@@ -102,7 +119,7 @@ def show_wallet_info(skale, address=None):
 @main.command()
 @click.option('--address', help='Address to check account', default=None)
 @click.pass_context
-def show(ctx, address):
+def info(ctx, address):
     """ Command for displaying information about account """
     skale = ctx.obj['skale']
     show_wallet_info(skale, address)

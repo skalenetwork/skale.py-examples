@@ -112,7 +112,7 @@ def show(ctx, all_nodes):
     """ Command to show id name and ip of active nodes """
     skale = ctx.obj['skale']
 
-    if all_nodes: # todo: tmp fix, remove it later
+    if all_nodes:  # todo: tmp fix, remove it later
         number_of_nodes = skale.nodes.contract.functions.getNumberOfNodes().call()
         ids = range(0, number_of_nodes)
     else:
@@ -141,6 +141,18 @@ def remove(ctx, node_name):
     node_id = skale.nodes.node_name_to_index(node_name)
     skale.manager.node_exit(node_id, wait_for=True, gas_price=4500000000)
     # skale.manager.delete_node_by_root(node_id, wait_for=True)
+
+
+@main.command()
+@click.pass_context
+def remove_all(ctx):
+    """ Command to remove all nodes """
+    skale = ctx.obj['skale']
+    cnt = 0
+    for nid in skale.nodes.get_active_node_ids():
+        skale.manager.node_exit(nid, wait_for=True)
+        cnt += 1
+    print(f'Success. {cnt} nodes was removed')
 
 
 if __name__ == "__main__":

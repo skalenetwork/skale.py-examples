@@ -48,8 +48,9 @@ def main(ctx, endpoint, abi_filepath, ima_abi_filepath):
 
 @main.command()
 @click.argument('schain_name')
+@click.option('--skip-dry-run', is_flag=True, default=False)
 @click.pass_context
-def register_schain(ctx, schain_name):
+def register_schain(ctx, schain_name, skip_dry_run):
     skale = ctx.obj['skale']
     skale_ima = ctx.obj['skale_ima']
     res = skale_ima.lock_and_data_for_mainnet.add_schain(schain_name)

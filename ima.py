@@ -20,7 +20,7 @@
 
 import click
 
-from skale import Skale
+from skale import Skale, SkaleIma
 from skale.utils.helper import get_abi
 from skale.contracts.base_contract import BaseContract, transaction_method
 from skale.utils.helper import init_default_logger
@@ -30,18 +30,6 @@ from config import ENDPOINT, ABI_FILEPATH, IMA_ABI_FILEPATH
 from utils import init_wallet
 
 init_default_logger()
-
-DEFAULT_TOKEN_MANAGER_ADDRESS = '0x57ad607c6e90df7d7f158985c3e436007a15d744'
-
-
-class LockAndData(BaseContract):
-    @transaction_method
-    def add_schain(self, schain_name, token_manager_address=DEFAULT_TOKEN_MANAGER_ADDRESS):
-        address_fx = to_checksum_address(token_manager_address)
-        return self.contract.functions.addSchain(
-            schain_name,
-            address_fx
-        )
 
 
 @click.group()
@@ -55,7 +43,7 @@ def main(ctx, endpoint, abi_filepath, ima_abi_filepath):
     ctx.ensure_object(dict)
     wallet = init_wallet(endpoint)
     ctx.obj['skale'] = Skale(endpoint, abi_filepath, wallet)
-    ctx.obj['ima_abi'] = get_abi(IMA_ABI_FILEPATH)
+    ctx.obj['skale_ima'] = SkaleIma(endpoint, ima_abi_filepath, wallet)
 
 
 @main.command()
@@ -63,9 +51,8 @@ def main(ctx, endpoint, abi_filepath, ima_abi_filepath):
 @click.pass_context
 def register_schain(ctx, schain_name):
     skale = ctx.obj['skale']
-    ima_abi = ctx.obj['ima_abi']
-    lock_and_data = LockAndData(skale, 'lock_and_data', ima_abi['lock_and_data_for_mainnet_address'], ima_abi['lock_and_data_for_mainnet_abi'])
-    res = lock_and_data.add_schain(schain_name)
+    skale_ima = ctx.obj['skale_ima']
+    res = skale_ima.lock_and_data_for_mainnet.add_schain(schain_name)
     print(res)
 
 

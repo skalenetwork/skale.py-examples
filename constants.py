@@ -159,3 +159,7 @@ def use_whitelist(ctx):
     """ Check if whitelist feature enabled """
     skale = ctx.obj['skale']
     print(skale.validator_service.get_use_whitelist())
+
+
+if __name__ == "__main__":
+    main()

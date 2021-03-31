@@ -30,6 +30,7 @@ from skale import Skale
 from skale.dataclasses.skaled_ports import SkaledPorts
 from skale.schain_config.generator import get_nodes_for_schain
 from skale.utils.helper import init_default_logger
+from skale.utils.contracts_provision.main import add_test_schain_type
 
 from skale.utils.constants import LONG_LINE
 from skale.utils.helper import ip_from_bytes
@@ -290,6 +291,14 @@ def is_last_dkg_successful(ctx, schain_name):
     skale = ctx.obj['skale']
     group_index = skale.schains.name_to_id(schain_name)
     res = skale.dkg.is_last_dkg_successful(group_index)
+    print(res)
+
+
+@main.command()
+@click.pass_context
+def add_test_type(ctx):
+    skale = ctx.obj['skale']
+    res = add_test_schain_type(skale)
     print(res)
 
 

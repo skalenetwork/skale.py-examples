@@ -44,6 +44,9 @@ init_default_logger()
 logger = logging.getLogger(__name__)
 
 
+TEST_SRW_FUND_VALUE = 3000000000000000000
+
+
 class SchainType(Enum):
     TINY = 1
     SMALL = 2
@@ -124,11 +127,17 @@ def create_schain(skale, wallet, nodes_type_name, by_foundation=False):
     print(nodes_type_idx)
     schain_name = generate_random_schain_name()
     if by_foundation:
+        skale.schains.grant_role(
+            skale.schains.schain_creator_role(),
+            skale.wallet.address
+        )
         skale.schains.add_schain_by_foundation(
             lifetime_seconds,
             nodes_type_idx,
             0,
-            schain_name
+            schain_name,
+            wait_for=True,
+            value=TEST_SRW_FUND_VALUE
         )
     else:
         price_in_wei = skale.schains.get_schain_price(nodes_type_idx,

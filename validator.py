@@ -59,7 +59,9 @@ def register(ctx, name):
         description='',
         fee_rate=1,
         min_delegation_amount=1,
-        wait_for=True
+        wait_for=True,
+        skip_dry_run=True,
+        gas_limit=200000000
     )
 
 

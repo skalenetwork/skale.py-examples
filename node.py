@@ -27,6 +27,7 @@ from skale import Skale
 from skale.utils.helper import ip_from_bytes, init_default_logger
 from skale.utils.constants import LONG_LINE
 from skale.contracts.manager.nodes import NodeStatus
+from skale.utils.web3_utils import public_key_to_address, to_checksum_address
 
 from utils import init_wallet, generate_random_node_data
 from config import ENDPOINT, ABI_FILEPATH
@@ -106,14 +107,17 @@ def schains_by_node(ctx, save_to):
 
 
 @main.command()
-@click.option('--all-nodes', is_flag=True, default=False, help='Show all nodes')
+@click.option('--all-nodes',
+              is_flag=True, default=False, help='Show all nodes')
 @click.pass_context
 def show(ctx, all_nodes):
     """ Command to show id name and ip of active nodes """
     skale = ctx.obj['skale']
+    print(skale.nodes.get_active_node_ids())
 
     if all_nodes:  # todo: tmp fix, remove it later
-        number_of_nodes = skale.nodes.contract.functions.getNumberOfNodes().call()
+        number_of_nodes = skale.nodes.contract.functions \
+                            .getNumberOfNodes().call()
         ids = range(0, number_of_nodes)
     else:
         ids = skale.nodes.get_active_node_ids()
@@ -124,9 +128,13 @@ def show(ctx, all_nodes):
         name = data.get('name')
         ip = ip_from_bytes(data.get('ip'))
         pub_key = data['publicKey']
+        address = to_checksum_address(public_key_to_address(pub_key))
         port = data.get('port')
         node_status = skale.nodes.contract.functions.getNodeStatus(_id).call()
-        nodes_data.append((_id, name, ip, port, pub_key, NodeStatus(node_status).name))
+        nodes_data.append(
+            (_id, name, ip, port, pub_key,
+             NodeStatus(node_status).name, address)
+        )
     print(json.dumps(nodes_data, indent=4))
     print(f'Nodes: {len(nodes_data)}')
 
@@ -153,6 +161,24 @@ def remove_all(ctx):
         skale.manager.node_exit(nid, wait_for=True)
         cnt += 1
     print(f'Success. {cnt} nodes was removed')
+
+
+@main.command()
+@click.argument('node_id', type=int)
+@click.pass_context
+def set_maintenance(ctx, node_id):
+    """ Set in maintenance """
+    skale = ctx.obj['skale']
+    skale.nodes.set_node_in_maintenance(node_id)
+
+
+@main.command()
+@click.argument('node_id', type=int)
+@click.pass_context
+def remove_maintenance(ctx, node_id):
+    """ Set in maintenance """
+    skale = ctx.obj['skale']
+    skale.nodes.remove_node_from_in_maintenance(node_id)
 
 
 if __name__ == "__main__":

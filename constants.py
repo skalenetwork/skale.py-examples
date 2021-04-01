@@ -68,6 +68,14 @@ def set_msr(ctx, new_msr):
 
 
 @main.command()
+@click.pass_context
+def msr(ctx):
+    """ Show minimum stacking amount """
+    skale = ctx.obj['skale']
+    print(skale.constants_holder.msr())
+
+
+@main.command()
 @click.argument('new_dp')
 @click.pass_context
 def set_delegation_period(ctx, new_dp):

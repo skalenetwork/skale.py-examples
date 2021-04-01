@@ -122,23 +122,28 @@ def get_schain_info(skale, schain_name):
     return {'schain_struct': schain_struct, 'schain_nodes': schain_nodes}
 
 
-def create_schain(skale, wallet, nodes_type_name, by_foundation=False):
+def create_schain(skale, wallet, nodes_type_name, by_foundation=False,
+                  value=TEST_SRW_FUND_VALUE):
     lifetime_seconds = 12 * 3600  # 12 hours
     nodes_type_idx = int(SchainType[nodes_type_name].value)
+    nodes_type_idx = 1
     print(nodes_type_idx)
     schain_name = generate_random_schain_name()
     if by_foundation:
-        skale.schains.grant_role(
-            skale.schains.schain_creator_role(),
-            skale.wallet.address
-        )
+        role = skale.schains.schain_creator_role()
+        if not skale.manager.has_role(role, skale.wallet.address):
+            skale.schains.grant_role(
+                role,
+                skale.wallet.address,
+                wait_for=True
+            )
         skale.schains.add_schain_by_foundation(
             lifetime_seconds,
             nodes_type_idx,
             0,
             schain_name,
-            wait_for=True,
-            value=TEST_SRW_FUND_VALUE
+            value=value,
+            wait_for=True
         )
     else:
         price_in_wei = skale.schains.get_schain_price(nodes_type_idx,
@@ -149,7 +154,8 @@ def create_schain(skale, wallet, nodes_type_name, by_foundation=False):
             price_in_wei,
             schain_name,
             skip_dry_run=True,
-            gas_limit=7500000
+            gas_limit=7500000,
+            value=value
         )
     return get_schain_info(skale, schain_name)
 
@@ -215,8 +221,9 @@ def create(ctx, amount, save_to, type):
               type=click.Choice([n_type.name for n_type in SchainType],
                                 case_sensitive=False),
               help='Nodes type (tiny/small/medium/test2/test4) for schain')
+@click.option('--value', default=0, type=int)
 @click.pass_context
-def create_by_foundation(ctx, amount, save_to, type):
+def create_by_foundation(ctx, amount, save_to, type, value):
     """
     Command that creates schains
     from foundation account specified by ETH_PRIVATE_KEY
@@ -224,7 +231,7 @@ def create_by_foundation(ctx, amount, save_to, type):
     skale = ctx.obj['skale']
     for i in range(amount):
         schain_info = create_schain(skale, skale.wallet, type,
-                                    by_foundation=True)
+                                    by_foundation=True, value=value)
         save_info(i, schain_info, skale.wallet, save_to)
         logger.info(LONG_LINE)
     show_all_schains_names(skale)
@@ -278,9 +285,26 @@ def grant_role(ctx, address):
     """ Command for granting creator role to address """
     skale = ctx.obj['skale']
     address = to_checksum_address(address)
-    skale.schains.grant_role(skale.schains.schain_creator_role(),
+    skale.manager.grant_role(skale.manager.create_schain(),
                              address)
     print('Success')
+
+
+@main.command()
+@click.pass_context
+@click.argument('address')
+def has_default_admin_role(ctx, address):
+    """ Command for checking if account """
+    """ specified by address has default admin role """
+    skale = ctx.obj['skale']
+    address = to_checksum_address(address)
+    print(address)
+    role = skale.manager.admin_role()
+    res = skale.manager.has_role(
+        role,
+        address
+    )
+    print(res)
 
 
 @main.command()

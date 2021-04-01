@@ -4,7 +4,7 @@ import click
 from skale import Skale
 from skale.utils.account_tools import check_ether_balance, send_ether
 from skale.utils.helper import init_default_logger
-from skale.utils.web3_utils import private_key_to_address
+from skale.utils.web3_utils import init_web3, private_key_to_address
 from web3 import Web3
 
 from config import ENDPOINT, ABI_FILEPATH
@@ -19,11 +19,16 @@ ETH_IN_WEI = 10 ** 18
 @click.group()
 @click.option('--endpoint', default=ENDPOINT, help='skale manager endpoint')
 @click.option('--abi-filepath', default=ABI_FILEPATH, help='abi file')
+@click.option('--no-skale', is_flag=True, help='skip skale initialization')
 @click.pass_context
-def main(ctx, endpoint, abi_filepath):
+def main(ctx, endpoint, abi_filepath, no_skale):
     ctx.ensure_object(dict)
     wallet = init_wallet(endpoint)
-    ctx.obj['skale'] = Skale(endpoint, abi_filepath, wallet)
+    if no_skale:
+        ctx.obj['web3'] = init_web3(endpoint)
+    else:
+        ctx.obj['skale'] = Skale(endpoint, abi_filepath, wallet)
+        ctx.obj['web3'] = ctx.obj['skale'].web3
 
 
 @main.command()
@@ -106,11 +111,17 @@ def eth_transfer(ctx, address_to, eth_amount):
     print('Success')
 
 
+def get_eth_balance(web3: Web3, address: str) -> int:
+    chs_address = Web3.toChecksumAddress(address)
+    return check_ether_balance(web3, chs_address)
+
+
 def show_wallet_info(skale, address=None):
+    print(f'Avg gp {skale.web3.eth.gasPrice}')
     address = address or skale.wallet.address
     chs_address = Web3.toChecksumAddress(address)
     skale_balance = skale.token.get_balance(chs_address)
-    eth_balance = check_ether_balance(skale.web3, chs_address)
+    eth_balance = get_eth_balance(skale.web3, chs_address)
     print(f'Address: {address}')
     print('Balance {} SKL'.format(skale_balance / ETH_IN_WEI))
     print('Balance {} ETH'.format(eth_balance))
@@ -123,6 +134,23 @@ def info(ctx, address):
     """ Command for displaying information about account """
     skale = ctx.obj['skale']
     show_wallet_info(skale, address)
+
+
+@main.command()
+@click.option('--address', help='Address to check eth balance', required=True)
+@click.pass_context
+def eth_balance(ctx, address: str) -> None:
+    """ Command to show eth account balance """
+    balance = get_eth_balance(ctx.obj['web3'], address)
+    print(f'ETH balance: {balance}')
+
+
+@main.command()
+@click.pass_context
+def avg_gas_price(ctx) -> None:
+    """ Command to show eth account balance """
+    avg_gas_price = ctx.obj['web3'].eth.gasPrice
+    print(f'ETH gas price: {avg_gas_price}')
 
 
 if __name__ == "__main__":

@@ -72,6 +72,7 @@ def delegations_by_holder(ctx):
 @main.command()
 @click.argument('validator_id')
 @click.argument('address')
+@click.pass_context
 def withdraw_bounty(ctx, validator_id, address):
     """ Withdraw bounty from validator_id to address """
     skale = ctx.obj['skale']
@@ -82,6 +83,7 @@ def withdraw_bounty(ctx, validator_id, address):
 
 @main.command()
 @click.argument('delegation_id')
+@click.pass_context
 def request_undelegation(ctx, delegation_id):
     """ Request undelagation for delegation provided by delegation_id """
     skale = ctx.obj['skale']

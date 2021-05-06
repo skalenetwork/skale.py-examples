@@ -37,6 +37,10 @@ from skale.utils.helper import ip_from_bytes
 from skale.utils.random_names.generator import generate_random_schain_name
 from skale.utils.web3_utils import to_checksum_address
 
+from skale.schain_config.generator import get_schain_nodes_with_schains
+from skale.schain_config.ports_allocation import get_schain_base_port_on_node
+
+
 from utils import create_account, init_wallet
 from config import ENDPOINT, ABI_FILEPATH
 
@@ -111,15 +115,21 @@ def get_node_schain_ports_info(base_port):
 
 def get_schain_info(skale, schain_name):
     schain_struct = skale.schains.get_by_name(schain_name)
-    schain_nodes = get_nodes_for_schain(skale, schain_name)
-    for node_info in schain_nodes:
+    schain_nodes_with_schains = get_schain_nodes_with_schains(skale, schain_name)
+
+    for i, node_info in enumerate(schain_nodes_with_schains, 1):
+        base_port = get_schain_base_port_on_node(node_info['schains'], schain_name, node_info['port'])
+
         node_info['ip'] = ip_from_bytes(node_info['ip'])
         node_info['publicIP'] = ip_from_bytes(node_info['publicIP'])
-        ports = get_node_schain_ports_info(node_info['port'])
-        node_info['basePort'] = node_info['port']
+        ports = get_node_schain_ports_info(base_port)
+        node_info['basePort'] = base_port
         node_info.pop('port')
+        node_info.pop('schains')
         node_info['ports'] = ports
-    return {'schain_struct': schain_struct, 'schain_nodes': schain_nodes}
+        node_info['http_endpoint'] = f'http://{node_info["publicIP"]}:{node_info["ports"]["HTTP_JSON"]}'
+        node_info['https_endpoint'] = f'http://{node_info["publicIP"]}:{node_info["ports"]["HTTPS_JSON"]}'
+    return {'schain_struct': schain_struct, 'schain_nodes': schain_nodes_with_schains}
 
 
 def create_schain(skale, wallet, nodes_type_name, by_foundation=False):
@@ -300,6 +310,14 @@ def add_test_type(ctx):
     skale = ctx.obj['skale']
     res = add_test_schain_type(skale)
     print(res)
+
+
+@main.command()
+@click.pass_context
+def types(ctx):
+    skale = ctx.obj['skale']
+    res = skale.schains_internal.number_of_schain_types()
+    print('number_of_schain_types', res)
 
 
 if __name__ == "__main__":

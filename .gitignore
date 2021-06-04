@@ -137,3 +137,6 @@ pk.txt
 creds/
 
 .DS_Store
+
+*.json
+*.csv

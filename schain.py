@@ -49,7 +49,7 @@ init_default_logger()
 logger = logging.getLogger(__name__)
 
 
-TEST_SRW_FUND_VALUE = 3000000000000000000
+TEST_SRW_FUND_VALUE = 300000000000000000
 
 
 class SchainType(Enum):

@@ -125,8 +125,7 @@ def show(ctx, all_nodes):
         ip = ip_from_bytes(data.get('ip'))
         pub_key = data['publicKey']
         port = data.get('port')
-        node_status = skale.nodes.contract.functions.getNodeStatus(_id).call()
-        nodes_data.append((_id, name, ip, port, pub_key, NodeStatus(node_status).name))
+        nodes_data.append((_id, name, ip, port, pub_key, NodeStatus(data['status']).name))
     print(json.dumps(nodes_data, indent=4))
     print(f'Nodes: {len(nodes_data)}')
 

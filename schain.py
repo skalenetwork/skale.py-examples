@@ -25,10 +25,10 @@ import os
 from enum import Enum
 
 import click
-
-from skale import Skale
+from ima_predeployed.generator import generate_abi
+from skale import Skale, SkaleIma
 from skale.dataclasses.skaled_ports import SkaledPorts
-from skale.schain_config.generator import get_nodes_for_schain
+# from skale.schain_config.generator import get_nodes_for_schain
 from skale.utils.helper import init_default_logger
 from skale.utils.contracts_provision.main import add_test_schain_type
 
@@ -42,7 +42,7 @@ from skale.schain_config.ports_allocation import get_schain_base_port_on_node
 
 
 from utils import create_account, init_wallet
-from config import ENDPOINT, ABI_FILEPATH
+from config import ENDPOINT, ABI_FILEPATH, IMA_ABI_FILEPATH
 
 
 init_default_logger()
@@ -115,10 +115,16 @@ def get_node_schain_ports_info(base_port):
 
 def get_schain_info(skale, schain_name):
     schain_struct = skale.schains.get_by_name(schain_name)
-    schain_nodes_with_schains = get_schain_nodes_with_schains(skale, schain_name)
+    schain_nodes_with_schains = get_schain_nodes_with_schains(
+        skale,
+        schain_name
+    )
 
     for i, node_info in enumerate(schain_nodes_with_schains, 1):
-        base_port = get_schain_base_port_on_node(node_info['schains'], schain_name, node_info['port'])
+        base_port = get_schain_base_port_on_node(
+            node_info['schains'],
+            schain_name, node_info['port']
+        )
 
         node_info['ip'] = ip_from_bytes(node_info['ip'])
         node_info['publicIP'] = ip_from_bytes(node_info['publicIP'])
@@ -127,14 +133,25 @@ def get_schain_info(skale, schain_name):
         node_info.pop('port')
         node_info.pop('schains')
         node_info['ports'] = ports
-        node_info['http_endpoint'] = f'http://{node_info["publicIP"]}:{node_info["ports"]["HTTP_JSON"]}'
-        node_info['https_endpoint'] = f'http://{node_info["publicIP"]}:{node_info["ports"]["HTTPS_JSON"]}'
-    return {'schain_struct': schain_struct, 'schain_nodes': schain_nodes_with_schains}
+        node_info['http_endpoint'] = f'http://{node_info["publicIP"]}:{node_info["ports"]["HTTP_JSON"]}'  # noqa
+        node_info['https_endpoint'] = f'http://{node_info["publicIP"]}:{node_info["ports"]["HTTPS_JSON"]}'  # noqa
+
+    return {
+        'schain_struct': schain_struct,
+        'schain_nodes': schain_nodes_with_schains
+    }
 
 
-def create_schain(skale, wallet, nodes_type_name, by_foundation=False):
+def create_schain(
+    skale,
+    wallet,
+    nodes_type_name,
+    by_foundation=False,
+    skale_ima=None
+):
     lifetime_seconds = 12 * 3600  # 12 hours
     nodes_type_idx = int(SchainType[nodes_type_name].value)
+    nodes_type_idx = 1
     print(nodes_type_idx)
     schain_name = generate_random_schain_name()
     if by_foundation:
@@ -161,6 +178,19 @@ def create_schain(skale, wallet, nodes_type_name, by_foundation=False):
             skip_dry_run=True,
             gas_limit=7500000
         )
+    if skale_ima:
+        schain_ima_abi = generate_abi()
+        skale_ima.linker.connect_schain(
+            schain_name,
+            [
+                schain_ima_abi['community_locker_address'],
+                schain_ima_abi['token_manager_eth_address'],
+                schain_ima_abi['token_manager_erc20_address'],
+                schain_ima_abi['token_manager_erc721_address'],
+                schain_ima_abi['token_manager_erc1155_address']
+            ]
+        )
+
     return get_schain_info(skale, schain_name)
 
 
@@ -232,9 +262,11 @@ def create_by_foundation(ctx, amount, save_to, type):
     from foundation account specified by ETH_PRIVATE_KEY
     """
     skale = ctx.obj['skale']
+    skale_ima = SkaleIma(ENDPOINT, IMA_ABI_FILEPATH, skale.wallet)
+
     for i in range(amount):
         schain_info = create_schain(skale, skale.wallet, type,
-                                    by_foundation=True)
+                                    by_foundation=True, skale_ima=skale_ima)
         save_info(i, schain_info, skale.wallet, save_to)
         logger.info(LONG_LINE)
     show_all_schains_names(skale)
@@ -268,6 +300,8 @@ def remove_all(ctx):
 def show(ctx):
     """ Command that show all schains ids """
     skale = ctx.obj['skale']
+    # from skale.utils.contracts_provision.main import add_test_permissions
+    # add_test_permissions(skale)
     show_all_schains_names(skale)
 
 

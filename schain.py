@@ -348,10 +348,20 @@ def add_test_type(ctx):
 
 @main.command()
 @click.pass_context
+def add_types(ctx):
+    skale = ctx.obj['skale']
+    for p, n in [(1, 16), (4, 16), (128, 16), (0, 2), (0, 4)]:
+        skale.schains_internal.add_schain_type(p, n)
+
+
+@main.command()
+@click.pass_context
 def types(ctx):
     skale = ctx.obj['skale']
-    res = skale.schains_internal.number_of_schain_types()
-    print('number_of_schain_types', res)
+    print('Schain types: ')
+    n = skale.schains_internal.contract.functions.numberOfSchainTypes().call()
+    for i in range(1, n + 1):
+        print(skale.schains_internal.contract.functions.schainTypes(i).call())
 
 
 if __name__ == "__main__":

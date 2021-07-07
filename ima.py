@@ -18,13 +18,13 @@
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """ Commands to manage SKALE IMA """
 
+import json
+
 import click
 
+from ima_predeployed.generator import generate_abi
 from skale import Skale, SkaleIma
-from skale.utils.helper import get_abi
-from skale.contracts.base_contract import BaseContract, transaction_method
 from skale.utils.helper import init_default_logger
-from skale.utils.web3_utils import to_checksum_address
 
 from config import ENDPOINT, ABI_FILEPATH, IMA_ABI_FILEPATH
 from utils import init_wallet
@@ -51,10 +51,18 @@ def main(ctx, endpoint, abi_filepath, ima_abi_filepath):
 @click.option('--skip-dry-run', is_flag=True, default=False)
 @click.pass_context
 def register_schain(ctx, schain_name, skip_dry_run):
-    skale = ctx.obj['skale']
     skale_ima = ctx.obj['skale_ima']
     res = skale_ima.lock_and_data_for_mainnet.add_schain(schain_name)
     print(res)
+
+
+@main.command()
+@click.argument('out_file')
+@click.pass_context
+def schain_ima_abi(ctx, out_file):
+    abi = generate_abi()
+    with open(out_file, 'w') as out:
+        json.dump(abi, out)
 
 
 if __name__ == "__main__":

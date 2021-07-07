@@ -28,6 +28,8 @@ from skale.utils.helper import ip_from_bytes, init_default_logger
 from skale.utils.constants import LONG_LINE
 from skale.contracts.manager.nodes import NodeStatus
 
+from skale.utils.contracts_provision.main import add_all_permissions
+
 from utils import init_wallet, generate_random_node_data
 from config import ENDPOINT, ABI_FILEPATH
 
@@ -153,6 +155,13 @@ def remove_all(ctx):
         cnt += 1
     print(f'Success. {cnt} nodes was removed')
 
+
+@main.command()
+@click.argument('address')
+@click.pass_context
+def all_permissions(ctx, address):
+    skale = ctx.obj['skale']
+    add_all_permissions(skale, address)
 
 if __name__ == "__main__":
     main()
